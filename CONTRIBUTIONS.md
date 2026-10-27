@@ -53,7 +53,7 @@ Le préfixe `fix/*` est une convention complémentaire retenue pour le projet.
 Les branches de travail utilisent des noms en anglais, en minuscules et séparés par des tirets :
 
 ```text
-feature/nom de la feautre
+feature/nom de la feature
 etc
 ```
 
