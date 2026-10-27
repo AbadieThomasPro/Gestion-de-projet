@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop, dev]
+
+# Cancels the previous run if a new commit is pushed on the same branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: API documentation is up to date
+        run: |
+          npm run docs
+          git diff --exit-code docs/API.md || (echo "::error::Run 'npm run docs' and commit docs/API.md" && exit 1)

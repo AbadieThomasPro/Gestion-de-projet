@@ -1,0 +1,38 @@
+name: PR check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  naming:
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Branch name
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          regex='^((feature|fix|hotfix)/[A-Za-z0-9._-]+|release/[0-9]+\.[0-9]+\.[0-9]+|develop|dev)$'
+          if [[ ! "$BRANCH" =~ $regex ]]; then
+            echo "::error::Branch '$BRANCH' must look like feature/xxx, fix/xxx, hotfix/xxx or release/x.y.z"
+            exit 1
+          fi
+
+      - name: PR title (Conventional Commits)
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          regex='^(feat|fix|refactor|docs|test|ci|chore)(\((frontend|backend|database|infra)\))?: .+'
+          if [[ ! "$TITLE" =~ $regex ]]; then
+            echo "::error::Title '$TITLE' must look like 'feat(frontend): add login page'"
+            exit 1
+          fi
+
+  labels:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@v5
