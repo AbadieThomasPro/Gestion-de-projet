@@ -1,0 +1,15 @@
+{
+  "name": "facebook-like",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n back,front -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "docs": "node scripts/generate-api-docs.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
