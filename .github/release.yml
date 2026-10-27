@@ -1,0 +1,13 @@
+# Groups the PRs by label in the automatic release notes
+changelog:
+  categories:
+    - title: Frontend
+      labels: [frontend]
+    - title: Backend
+      labels: [backend]
+    - title: Infra / CI
+      labels: [infra]
+    - title: Documentation
+      labels: [documentation]
+    - title: Autres
+      labels: ['*']
