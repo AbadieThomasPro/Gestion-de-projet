@@ -1,6 +1,6 @@
-# 📘 Facebook like
+# 📍 LocalLoop
 
-Réseau social inspiré de Facebook : **React** (frontend) + **Next.js** (API backend).
+Réseau social de quartier : on suit son quartier, on y publie et on y découvre la vie locale. **React** (frontend) + **Next.js** (API backend).
 
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)
@@ -23,7 +23,7 @@ Réseau social inspiré de Facebook : **React** (frontend) + **Next.js** (API ba
 
 ## 🎯 Contexte
 
-Projet de groupe : concevoir un réseau social simplifié reprenant les usages clés de Facebook (compte, publications, fil d'actualité, interactions, amis).
+Projet de groupe : concevoir **LocalLoop**, un réseau social local centré sur le quartier (compte, quartier, fil local, publications, interactions, événements). Les identifiants de tickets `LL-<id>` viennent du nom LocalLoop.
 
 | Rôle | Responsabilité |
 |---|---|
@@ -43,7 +43,8 @@ Colonnes du board (champ **Status**) : **Backlog → À faire → En cours → E
 | 📰 Fil d'actualité | Publier, fil paginé, supprimer | P0 |
 | 👤 Profil | Page profil, édition, avatar | P1 |
 | 👍 Interactions | Likes, commentaires | P1 |
-| 🤝 Amis | Recherche, demandes d'amis | P2 |
+| 📅 Événements | Créer un événement local, y participer | P1 |
+| 🔔 Notifications | Reportées en V2 | V2 |
 
 Le découpage en releases est détaillé dans la [story map](docs/STORYMAP.md).
 

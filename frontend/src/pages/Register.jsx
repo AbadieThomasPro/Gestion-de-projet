@@ -36,7 +36,7 @@ export default function Register({ onLogin }) {
 
   return (
     <div className="auth-page">
-      <h1 className="logo">facebook-like</h1>
+      <h1 className="logo">LocalLoop</h1>
       <form className="card auth-form" onSubmit={handleSubmit}>
         <div className="row">
           <input name="firstName" placeholder="Prénom" value={form.firstName} onChange={handleChange} />
