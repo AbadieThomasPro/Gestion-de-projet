@@ -1,5 +1,3 @@
-import { eq } from 'drizzle-orm';
-import { posts } from '@/db';
 import { findPublicUser, getUserId, unauthorized } from '@/lib/auth';
 import { listPosts } from '@/lib/posts';
 import { getFriendStatus } from '@/lib/friends';
@@ -15,10 +13,10 @@ export async function GET(request, { params }) {
     return Response.json({ error: 'Utilisateur introuvable' }, { status: 404 });
   }
 
-  const [userPosts, friendStatus] = await Promise.all([
-    listPosts({ userId, where: eq(posts.authorId, user.id) }),
+  const [posts, friendStatus] = await Promise.all([
+    listPosts({ userId, where: { authorId: user.id } }),
     getFriendStatus(userId, user.id),
   ]);
 
-  return Response.json({ user, posts: userPosts, friendStatus });
+  return Response.json({ user, posts, friendStatus });
 }

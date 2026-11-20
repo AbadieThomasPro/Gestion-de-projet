@@ -1,19 +1,15 @@
-import { and, eq, or } from 'drizzle-orm';
-import { db, friendRequests } from '@/db';
+import { prisma } from './prisma';
 
 // Request between two users, whatever its direction
-export async function findFriendRequest(userId, otherId) {
-  const [request] = await db
-    .select()
-    .from(friendRequests)
-    .where(
-      or(
-        and(eq(friendRequests.fromId, userId), eq(friendRequests.toId, otherId)),
-        and(eq(friendRequests.fromId, otherId), eq(friendRequests.toId, userId))
-      )
-    )
-    .limit(1);
-  return request;
+export function findFriendRequest(userId, otherId) {
+  return prisma.friendRequest.findFirst({
+    where: {
+      OR: [
+        { fromId: userId, toId: otherId },
+        { fromId: otherId, toId: userId },
+      ],
+    },
+  });
 }
 
 // Returns the relation between two users: 'me', 'friends', 'sent', 'received' or 'none'
