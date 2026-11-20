@@ -1,0 +1,22 @@
+name: Tâche
+description: Tâche front ou back, rattachée à une EPIC
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Partie
+      options: [frontend, backend, database, infra]
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Critères d'acceptation
+      value: |
+        - [ ] 

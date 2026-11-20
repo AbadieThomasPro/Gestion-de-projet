@@ -1,6 +1,6 @@
-## Ticket Notion
+## Issue
 
-<!-- Lien du ticket -->
+Closes #<!-- numéro de l'issue -->
 
 ## Description
 

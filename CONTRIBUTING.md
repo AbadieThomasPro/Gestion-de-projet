@@ -1,6 +1,6 @@
 # 🤝 Contribuer au projet
 
-Ce guide décrit **comment travailler sur le projet** : de la prise d'un ticket Notion jusqu'à la fusion de la Pull Request.
+Ce guide décrit **comment travailler sur le projet** : de la prise d'une issue jusqu'à la fusion de la Pull Request.
 Pour installer le projet, voir le [README](README.md#-installation).
 
 ## Sommaire
@@ -16,12 +16,12 @@ Pour installer le projet, voir le [README](README.md#-installation).
 
 ## 🔁 Cycle de vie d'une contribution
 
-1. **Prendre un ticket** dans Notion (statut *À faire*), se l'assigner, le passer *En cours*. Noter son identifiant `FB-<id>`.
+1. **Prendre une issue** dans le [Project](https://github.com/users/Miisterone/projects/5) (colonne *À faire*), se l'assigner, la passer *En cours*. Noter son numéro `#<n>`.
 2. **Créer sa branche** depuis `develop` à jour :
    ```bash
    git checkout develop
    git pull
-   git checkout -b feature/FB-12-profile-page
+   git checkout -b feature/12-profile-page
    ```
 3. **Développer** en faisant des commits cohérents (voir [Commits](#-commits)).
 4. **Ouvrir une Pull Request** vers `develop` (voir [Pull Requests](#-pull-requests)).
@@ -38,10 +38,10 @@ Nous suivons **GitFlow**.
 |---|---|---|---|
 | `main` | Versions stables livrées, taguées | — | — |
 | `develop` | Intégration des développements | `main` à l'initialisation | — |
-| `feature/FB-<id>-<desc>` | Nouvelle fonctionnalité | `develop` | `develop` |
-| `fix/FB-<id>-<desc>` | Correction pendant le développement | `develop` | `develop` |
+| `feature/<n>-<desc>` | Nouvelle fonctionnalité | `develop` | `develop` |
+| `fix/<n>-<desc>` | Correction pendant le développement | `develop` | `develop` |
 | `release/x.y.z` | Stabilisation d'une version | `develop` | `main` **et** `develop` |
-| `hotfix/FB-<id>-<desc>` | Correction urgente en production | `main` | `main` **et** `develop` |
+| `hotfix/<n>-<desc>` | Correction urgente en production | `main` | `main` **et** `develop` |
 
 > `fix/*` est une convention complémentaire au GitFlow standard, propre à notre projet.
 
@@ -51,13 +51,13 @@ Nous suivons **GitFlow**.
 
 ### Nommage
 
-- `FB-<id>` = identifiant du ticket Notion (propriété **ID** de la base Backlog).
+- `<n>` = numéro de l'issue GitHub (ex. `#12` → `12`).
 - `<desc>` : quelques mots **en anglais**, **en minuscules**, séparés par des **tirets**.
 
 ```text
-feature/FB-12-profile-page
-fix/FB-27-feed-pagination
-hotfix/FB-31-login-crash
+feature/12-profile-page
+fix/27-feed-pagination
+hotfix/31-login-crash
 release/1.0.0
 ```
 
@@ -116,10 +116,10 @@ ci: add lint and test checks
 
 ### Titre
 
-Même format qu'un commit, **avec l'identifiant du ticket** :
+Même format qu'un commit. La description de la PR contient **`Closes #<n>`** pour lier l'issue :
 
 ```text
-feat(frontend): add profile page [FB-12]
+feat(frontend): add profile page
 ```
 
 ### Avant d'ouvrir la PR
@@ -167,7 +167,7 @@ Tant que le MVP n'est pas livré, les versions sont en `0.x.y`. Le MVP sera la `
 
 ## 🚑 Correctif urgent (hotfix)
 
-1. Créer `hotfix/FB-<id>-<desc>` depuis `main`.
+1. Créer `hotfix/<n>-<desc>` depuis `main`.
 2. Corriger, ouvrir une PR vers `main`.
 3. Après fusion, taguer une version **CORRECTIF** (ex. `v1.0.1`).
 4. Reporter le correctif dans `develop` et, si besoin, dans la `release/*` en cours.

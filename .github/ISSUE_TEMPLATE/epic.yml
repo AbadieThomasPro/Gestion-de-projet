@@ -1,0 +1,21 @@
+name: EPIC
+description: Grande fonctionnalité, découpée en sous-issues front et back
+title: "[EPIC] "
+labels: [epic]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Objectif
+      description: En tant que <utilisateur>, je veux <action> afin de <bénéfice>.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Critères d'acceptation
+      value: |
+        - [ ] 
+  - type: markdown
+    attributes:
+      value: Après création, ajouter les tâches front et back avec **Create sub-issue**.

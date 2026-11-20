@@ -5,9 +5,9 @@ Réseau social inspiré de Facebook : **React** (frontend) + **Next.js** (API ba
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)
 ![Node](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white)
-![Notion](https://img.shields.io/badge/Gestion-Notion-000000?logo=notion&logoColor=white)
+![GitHub Projects](https://img.shields.io/badge/Gestion-GitHub%20Projects-181717?logo=github&logoColor=white)
 
-📋 **Backlog Notion :** [Facebook like — Backlog](https://app.notion.com/p/TrustSign-be7f6c85647e452898f97fe4be416485?source=copy_link)
+📋 **Backlog :** [GitHub Project](https://github.com/users/Miisterone/projects/5)
 
 ## Sommaire
 
@@ -27,11 +27,13 @@ Projet de groupe : concevoir un réseau social simplifié reprenant les usages c
 
 | Rôle | Responsabilité |
 |---|---|
-| **Product Owner** | Rédige et priorise le backlog Notion, valide les tickets |
+| **Product Owner** | Rédige et priorise le backlog (GitHub Project), valide les tickets |
 | **Dev Back** | API Next.js, base de données, sécurité |
 | **Dev Front** | Interface React, intégration de l'API |
 
-La gestion de projet se fait sur **Notion** : chaque EPIC contient des sous-tâches front et back. Chaque ticket a un identifiant unique **`FB-<id>`**, repris dans le nom des branches et des Pull Requests.
+La gestion de projet se fait sur **[GitHub Projects](https://github.com/users/Miisterone/projects/5)** : chaque ticket est une **issue** du dépôt. Une EPIC est une issue (label `epic`) dont les tâches front et back sont des **sous-issues**. Le numéro de l'issue **`#<n>`** est repris dans le nom des branches et des Pull Requests.
+
+Colonnes du board (champ **Status**) : **À faire → En cours → En review → À tester → Terminé**.
 
 ## ✨ Fonctionnalités
 
@@ -103,26 +105,26 @@ Gestion-de-projet/
 
 ## 🌿 Branching strategy
 
-Nous suivons **GitFlow** : deux branches permanentes (`main`, `develop`) et des branches courtes, une par ticket Notion.
+Nous suivons **GitFlow** : deux branches permanentes (`main`, `develop`) et des branches courtes, une par issue.
 
 | Branche | Rôle | Créée depuis | Fusionnée vers |
 |---|---|---|---|
 | `main` | Versions stables livrées, taguées | — | — |
 | `develop` | Intégration des fonctionnalités du sprint | `main` | — |
-| `feature/FB-<id>-<desc>` | Une fonctionnalité = un ticket Notion | `develop` | `develop` |
-| `fix/FB-<id>-<desc>` | Correction pendant le développement | `develop` | `develop` |
+| `feature/<n>-<desc>` | Une fonctionnalité = une issue | `develop` | `develop` |
+| `fix/<n>-<desc>` | Correction pendant le développement | `develop` | `develop` |
 | `release/x.y.z` | Stabilisation d'une version | `develop` | `main` + `develop` |
-| `hotfix/FB-<id>-<desc>` | Correctif urgent en production | `main` | `main` + `develop` |
+| `hotfix/<n>-<desc>` | Correctif urgent en production | `main` | `main` + `develop` |
 
 ```mermaid
 gitGraph
     commit id: "init"
     branch develop
     checkout develop
-    branch feature/FB-7-login-page
+    branch feature/7-login-page
     commit id: "feat(frontend): login page"
     checkout develop
-    merge feature/FB-7-login-page
+    merge feature/7-login-page
     branch release/0.1.0
     commit id: "chore: bump version"
     checkout main
@@ -152,7 +154,7 @@ flowchart LR
 |---|---|---|
 | **Backlog** | PO | Crée le ticket, le rattache à son EPIC |
 | **À faire** | Équipe | Ticket choisi en sprint planning |
-| **En cours** | Dev | Crée sa branche `feature/FB-<id>-<desc>` |
+| **En cours** | Dev | Crée sa branche `feature/<n>-<desc>` |
 | **En review** | Dev | Ouvre la PR vers `develop` 🤖 |
 | **À tester** | PO | PR fusionnée, le PO vérifie 🤖 |
 | **Terminé** | PO | Validé |
@@ -167,7 +169,7 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 |---|---|---|
 | [CI](.github/workflows/ci.yml) | Chaque PR et push sur `main` / `develop` | Vérifie que la doc de l'API est à jour |
 | [PR check](.github/workflows/pr-check.yml) | Ouverture / modification d'une PR | Vérifie le nom de la branche et le titre (Conventional Commits), ajoute les labels `frontend` / `backend` / `infra` / `documentation` |
-| [Notion](.github/workflows/notion.yml) | PR ouverte / mergée | Passe le ticket `FB-<id>` de la branche en **En review** puis **À tester** |
+| [Project](.github/workflows/project.yml) | Issue créée, PR ouverte / mergée | Ajoute l'issue au Project, puis passe l'issue `#<n>` de la branche en **En review** puis **À tester** |
 | [Docker](.github/workflows/docker.yml) | Push sur `main` ou tag `v*` | Build les images front et back et les publie sur GitHub Container Registry |
 | [Release](.github/workflows/release.yml) | Tag `v*` | Crée la release GitHub avec la liste des PR, classées par label |
 | [Dependabot](.github/dependabot.yml) | Chaque semaine | Ouvre des PR pour mettre à jour les dépendances |
@@ -183,7 +185,7 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 
 **Documentation automatique :** `npm run docs` lit les routes de `backend/app/api` et génère [docs/API.md](docs/API.md). La CI échoue si la doc n'a pas été régénérée après un changement d'API. Les notes de version sont générées à chaque release.
 
-**Configuration Notion** (une seule fois) : créer une intégration Notion, la connecter à la base des tickets, puis ajouter les secrets `NOTION_TOKEN` et `NOTION_DATABASE_ID` dans *Settings → Secrets and variables → Actions*. La base doit avoir une colonne `ID` (type *ID unique*, préfixe `FB`) et une colonne `Statut` (type *Statut*). Les noms sont modifiables en haut de [notion-status.mjs](.github/scripts/notion-status.mjs).
+**Configuration GitHub Project** (une seule fois) : créer un token *classic* avec les scopes `repo` et `project`, l'ajouter dans *Settings → Secrets and variables → Actions* sous le nom `PROJECT_TOKEN`. Dans le Project, le champ **Status** doit contenir les options `À faire`, `En cours`, `En review`, `À tester`, `Terminé` ; activer aussi le workflow intégré *Item closed → Terminé*. Le nom du champ est modifiable en haut de [project-status.mjs](.github/scripts/project-status.mjs).
 
 ## 📚 Documentation
 
