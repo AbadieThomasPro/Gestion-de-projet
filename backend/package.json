@@ -8,7 +8,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node db/migrate.js",
     "db:seed": "node db/seed.js",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -20,7 +22,8 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.11"
+    "drizzle-kit": "^0.31.11",
+    "vitest": "^3.2.7"
   },
   "type": "module"
 }

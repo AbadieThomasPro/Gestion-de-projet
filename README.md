@@ -75,6 +75,8 @@ npm install                                # installe front + back
 cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
 docker compose up -d db                    # PostgreSQL (ou une instance locale, cf. DATABASE_URL)
+docker compose exec db createdb -U localloop localloop_test   # base des tests
+docker compose exec db createdb -U localloop localloop_e2e    # base des tests E2E
 npm run db:migrate -w backend              # crée les tables
 npm run db:seed -w backend                 # comptes de démo (mot de passe : localloop)
 npm run dev                                # lance front + back
@@ -93,9 +95,13 @@ npm run dev                                # lance front + back
 |---|---|
 | `npm run dev` | Lance front + back en mode dev |
 | `npm run docs` | Régénère la doc de l'API ([docs/API.md](docs/API.md)) |
+| `npm test` | Tests unitaires et d'intégration (Vitest, back puis front) |
+| `npm run test:e2e` | Tests E2E Playwright en 800×600 (lance front et back) |
 | `npm run db:migrate -w backend` | Applique les migrations PostgreSQL |
 | `npm run db:generate -w backend` | Génère une migration après modification du schéma |
 | `npm run db:seed -w backend` | Ajoute les données de démonstration |
+
+Les tests d'intégration du back utilisent la base `localloop_test` (variable `TEST_DATABASE_URL`) et les tests E2E la base `localloop_e2e` (`E2E_DATABASE_URL`) : les deux sont vidées pendant les tests, ne jamais y mettre la base de développement.
 
 Le schéma et le choix de l'ORM (Drizzle) sont décrits dans [docs/DATABASE.md](docs/DATABASE.md).
 
