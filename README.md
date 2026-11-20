@@ -9,6 +9,8 @@ Réseau social inspiré de Facebook : **React** (frontend) + **Next.js** (API ba
 
 📋 **Backlog :** [GitHub Project](https://github.com/users/Miisterone/projects/5)
 
+🗂️ **Backlog par sprint :** [docs/backlog](docs/backlog/README.md) (ordre de réalisation, dépendances et statut vérifié dans le code)
+
 ## Sommaire
 
 - [Contexte](#-contexte)
@@ -56,6 +58,7 @@ Le découpage en releases est détaillé dans la [story map](docs/STORYMAP.md).
 | Node.js | ≥ 20 (22 recommandé, cf. `.nvmrc`) | `node -v` |
 | npm | ≥ 10 | `npm -v` |
 | Git | ≥ 2.30 | `git --version` |
+| PostgreSQL | 16 (ou Docker) | `psql --version` |
 
 ### Lancer avec Docker (le plus simple)
 
@@ -75,6 +78,11 @@ nvm use                                    # optionnel : utilise la version de .
 npm install                                # installe front + back
 cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
+docker compose up -d db                    # PostgreSQL (ou une instance locale, cf. DATABASE_URL)
+docker compose exec db createdb -U localloop localloop_test   # base des tests
+docker compose exec db createdb -U localloop localloop_e2e    # base des tests E2E
+npm run db:migrate -w backend              # crée les tables
+npm run db:seed -w backend                 # comptes de démo (mot de passe : localloop)
 npm run dev                                # lance front + back
 ```
 
@@ -84,6 +92,7 @@ npm run dev                                # lance front + back
 |---|---|---|
 | Frontend | http://localhost:5173 | Page d'accueil |
 | Backend | http://localhost:3001/api/health | `{ "status": "ok" }` |
+| Swagger | http://localhost:3001/api/docs | Documentation interactive de l'API |
 
 ### Commandes
 
@@ -91,13 +100,24 @@ npm run dev                                # lance front + back
 |---|---|
 | `npm run dev` | Lance front + back en mode dev |
 | `npm run docs` | Régénère la doc de l'API ([docs/API.md](docs/API.md)) |
+| `npm test` | Tests unitaires et d'intégration (Vitest, back puis front) |
+| `npm run storybook -w frontend` | Catalogue des composants sur http://localhost:6006 (viewport 800×600 par défaut) |
+| `npm run test:e2e` | Tests E2E Playwright en 800×600 (lance front et back) |
+| `npm run db:migrate -w backend` | Applique les migrations PostgreSQL (`prisma migrate deploy`) |
+| `npm run db:migrate:dev -w backend -- --name <nom>` | Crée une migration après modification de `schema.prisma` |
+| `npm run db:studio -w backend` | Ouvre Prisma Studio pour consulter les données |
+| `npm run db:seed -w backend` | Ajoute les données de démonstration |
+
+Les tests d'intégration du back utilisent la base `localloop_test` (variable `TEST_DATABASE_URL`) et les tests E2E la base `localloop_e2e` (`E2E_DATABASE_URL`) : les deux sont vidées pendant les tests, ne jamais y mettre la base de développement.
+
+Le schéma et l'ORM (Prisma) sont décrits dans [docs/DATABASE.md](docs/DATABASE.md).
 
 ### Structure
 
 ```text
 Gestion-de-projet/
 ├── frontend/   # React + Vite (servi par nginx en production)
-├── backend/    # Next.js (routes API dans app/api/)
+├── backend/    # Next.js (routes API dans app/api/, schéma Prisma dans prisma/)
 ├── docs/       # Personas, story map, doc de l'API…
 ├── scripts/    # Génération de la doc de l'API
 └── .github/    # CI/CD et automations
@@ -192,6 +212,10 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 | Document | Contenu |
 |---|---|
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branches, commits, Pull Requests, versions |
+| [docs/backlog](docs/backlog/README.md) | Backlog par sprint, ordre de réalisation et dépendances |
 | [docs/PERSONAS.md](docs/PERSONAS.md) | Nos 3 personas et leurs besoins |
 | [docs/STORYMAP.md](docs/STORYMAP.md) | Parcours utilisateur et découpage en releases |
 | [docs/API.md](docs/API.md) | Routes de l'API (générée automatiquement) |
+| [Swagger](http://localhost:3001/api/docs) | Doc interactive de l'API (`/api/docs`, document brut sur `/api/openapi.json`) |
+| [ERRORS.md](ERRORS.md) | Format des erreurs de l'API et catalogue des codes |
+| [docs/DATABASE.md](docs/DATABASE.md) | Schéma de la base, dictionnaire des données, migrations |

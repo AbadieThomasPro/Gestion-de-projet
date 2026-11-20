@@ -1,15 +1,9 @@
+import { prisma } from './prisma';
+
 // Notifies the author of a post when someone likes or comments it
-export function addNotification(db, { type, postId, fromId }) {
-  const post = db.posts.find((p) => p.id === postId);
+export async function addNotification({ type, postId, fromId }) {
+  const post = await prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
   if (!post || post.authorId === fromId) return;
 
-  db.notifications.push({
-    id: crypto.randomUUID(),
-    userId: post.authorId,
-    fromId,
-    type,
-    postId,
-    read: false,
-    createdAt: new Date().toISOString(),
-  });
+  await prisma.notification.create({ data: { userId: post.authorId, fromId, type, postId } });
 }

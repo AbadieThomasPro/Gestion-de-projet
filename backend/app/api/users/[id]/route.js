@@ -1,26 +1,17 @@
-import { readDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
-import { formatPost, sortByDate } from '@/lib/posts';
+import { requirePublicUser, requireUser } from '@/lib/auth';
 import { getFriendStatus } from '@/lib/friends';
+import { withErrorHandler } from '@/lib/handler';
+import { listPosts } from '@/lib/posts';
 
 // Profile of a user with their posts
-export function GET(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
+  const user = await requirePublicUser(params.id);
 
-  const db = readDb();
-  const user = db.users.find((u) => u.id === params.id);
-  if (!user) {
-    return Response.json({ error: 'Utilisateur introuvable' }, { status: 404 });
-  }
+  const [posts, friendStatus] = await Promise.all([
+    listPosts({ userId, where: { authorId: user.id } }),
+    getFriendStatus(userId, user.id),
+  ]);
 
-  const posts = sortByDate(db.posts.filter((p) => p.authorId === user.id)).map((p) =>
-    formatPost(db, p, userId)
-  );
-
-  return Response.json({
-    user: publicUser(user),
-    posts,
-    friendStatus: getFriendStatus(db, userId, user.id),
-  });
-}
+  return Response.json({ user, posts, friendStatus });
+});

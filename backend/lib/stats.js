@@ -1,3 +1,5 @@
+import { prisma } from './prisma';
+
 // Day of a date, as "YYYY-MM-DD" in UTC (the dates are stored in UTC)
 function toDay(date) {
   return new Date(date).toISOString().slice(0, 10);
@@ -18,15 +20,17 @@ export function computeStreak(dates, today) {
 }
 
 // Posts, likes and comments received on these posts, and current streak of a user
-export function getUserStats(db, userId, today = new Date()) {
-  const posts = db.posts.filter((p) => p.authorId === userId);
-  const postIds = new Set(posts.map((p) => p.id));
+export async function getUserStats(userId, today = new Date()) {
+  const posts = await prisma.post.findMany({
+    where: { authorId: userId },
+    select: { createdAt: true, _count: { select: { likes: true, comments: true } } },
+  });
 
   return {
     userId,
     posts: posts.length,
-    likesReceived: db.likes.filter((l) => postIds.has(l.postId)).length,
-    commentsReceived: db.comments.filter((c) => postIds.has(c.postId)).length,
+    likesReceived: posts.reduce((sum, p) => sum + p._count.likes, 0),
+    commentsReceived: posts.reduce((sum, p) => sum + p._count.comments, 0),
     currentStreak: computeStreak(
       posts.map((p) => p.createdAt),
       today

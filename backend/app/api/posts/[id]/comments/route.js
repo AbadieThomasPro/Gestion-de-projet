@@ -1,51 +1,38 @@
-import { readDb, writeDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
+import { publicUserSelect, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 import { addNotification } from '@/lib/notifications';
+import { requirePost } from '@/lib/posts';
+import { prisma } from '@/lib/prisma';
+import { commentSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validation';
 
-function withAuthor(db, comment) {
-  const author = db.users.find((u) => u.id === comment.authorId);
-  return { ...comment, author: author ? publicUser(author) : null };
-}
+const withAuthor = { author: { select: publicUserSelect } };
 
 // Comments of a post
-export function GET(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request, { params }) => {
+  requireUser(request);
+  const post = await requirePost(params.id);
 
-  const db = readDb();
-  const comments = db.comments
-    .filter((c) => c.postId === params.id)
-    .map((c) => withAuthor(db, c));
+  const comments = await prisma.comment.findMany({
+    where: { postId: post.id },
+    include: withAuthor,
+    orderBy: { createdAt: 'asc' },
+  });
 
   return Response.json({ comments });
-}
+});
 
 // Comment a post
-export async function POST(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const POST = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
+  const { content } = await parseBody(request, commentSchema);
+  const post = await requirePost(params.id);
 
-  const { content } = await request.json();
-  if (!content || !content.trim()) {
-    return Response.json({ error: 'Le commentaire est vide' }, { status: 400 });
-  }
+  const comment = await prisma.comment.create({
+    data: { postId: post.id, authorId: userId, content },
+    include: withAuthor,
+  });
+  await addNotification({ type: 'comment', postId: post.id, fromId: userId });
 
-  const db = readDb();
-  if (!db.posts.some((p) => p.id === params.id)) {
-    return Response.json({ error: 'Publication introuvable' }, { status: 404 });
-  }
-
-  const comment = {
-    id: crypto.randomUUID(),
-    postId: params.id,
-    authorId: userId,
-    content: content.trim(),
-    createdAt: new Date().toISOString(),
-  };
-
-  db.comments.push(comment);
-  addNotification(db, { type: 'comment', postId: params.id, fromId: userId });
-  writeDb(db);
-
-  return Response.json({ comment: withAuthor(db, comment) }, { status: 201 });
-}
+  return Response.json({ comment }, { status: 201 });
+});

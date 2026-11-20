@@ -1,44 +1,30 @@
-import { readDb, writeDb } from '@/lib/db';
-import { getUserId, unauthorized } from '@/lib/auth';
-import { formatPost, sortByDate } from '@/lib/posts';
+import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
+import { getPost, listPosts } from '@/lib/posts';
+import { prisma } from '@/lib/prisma';
+import { postSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validation';
 
 const PAGE_SIZE = 10;
 
 // Feed, 10 posts per page (?page=1)
-export function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
-  const page = Number(new URL(request.url).searchParams.get('page')) || 1;
-  const db = readDb();
-  const allPosts = sortByDate(db.posts);
-  const start = (page - 1) * PAGE_SIZE;
+  const page = Math.max(1, Math.floor(Number(new URL(request.url).searchParams.get('page'))) || 1);
 
-  const posts = allPosts.slice(start, start + PAGE_SIZE).map((p) => formatPost(db, p, userId));
+  // One more post than needed tells if there is a next page
+  const list = await listPosts({ userId, take: PAGE_SIZE + 1, skip: (page - 1) * PAGE_SIZE });
 
-  return Response.json({ posts, hasMore: start + PAGE_SIZE < allPosts.length });
-}
+  return Response.json({ posts: list.slice(0, PAGE_SIZE), hasMore: list.length > PAGE_SIZE });
+});
 
 // Publish a post
-export async function POST(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const POST = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
+  const { content } = await parseBody(request, postSchema);
 
-  const { content } = await request.json();
-  if (!content || !content.trim()) {
-    return Response.json({ error: 'La publication est vide' }, { status: 400 });
-  }
+  const post = await prisma.post.create({ data: { authorId: userId, content } });
 
-  const db = readDb();
-  const post = {
-    id: crypto.randomUUID(),
-    authorId: userId,
-    content: content.trim(),
-    createdAt: new Date().toISOString(),
-  };
-
-  db.posts.push(post);
-  writeDb(db);
-
-  return Response.json({ post: formatPost(db, post, userId) }, { status: 201 });
-}
+  return Response.json({ post: await getPost(post.id, userId) }, { status: 201 });
+});

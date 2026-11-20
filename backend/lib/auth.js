@@ -1,4 +1,7 @@
 import jwt from 'jsonwebtoken';
+import { AppError } from './errors';
+import { isUuid } from './ids';
+import { prisma } from './prisma';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
@@ -19,12 +22,34 @@ export function getUserId(request) {
   }
 }
 
-export function unauthorized() {
-  return Response.json({ error: 'Vous devez être connecté' }, { status: 401 });
+// Id of the logged user, LL_AUTH_401 if the token is missing or invalid
+export function requireUser(request) {
+  const userId = getUserId(request);
+  if (!userId) throw new AppError('LL_AUTH_401');
+  return userId;
 }
 
-// Removes the password before sending a user to the client
-export function publicUser(user) {
-  const { password, ...rest } = user;
-  return rest;
+// Fields of a user that can be sent to the client (never the password)
+export const publicUserSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  bio: true,
+  avatar: true,
+  // Only the neighbourhood is public, never an address
+  zoneId: true,
+  zone: { select: { id: true, name: true, city: true } },
+  createdAt: true,
+};
+
+export function findPublicUser(id) {
+  return prisma.user.findUnique({ where: { id }, select: publicUserSelect });
+}
+
+// Public profile of an existing user, LL_USER_404 otherwise
+export async function requirePublicUser(id) {
+  const user = isUuid(id) ? await findPublicUser(id) : null;
+  if (!user) throw new AppError('LL_USER_404');
+  return user;
 }

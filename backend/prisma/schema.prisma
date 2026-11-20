@@ -1,0 +1,133 @@
+// Database schema (PostgreSQL), source of the migrations of prisma/migrations.
+// See docs/DATABASE.md for the data dictionary.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Neighbourhoods a user can follow. The pilot zones are inserted by a migration.
+model Zone {
+  id    Int    @id @default(autoincrement())
+  name  String
+  city  String
+  users User[]
+
+  @@unique([name, city])
+  @@map("zones")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email     String   @unique
+  password  String
+  bio       String   @default("")
+  avatar    String   @default("")
+  // Neighbourhood chosen at registration, never an address (GDPR). Null for the accounts created before.
+  zoneId    Int?     @map("zone_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  zone                   Zone?           @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+  posts                  Post[]
+  comments               Comment[]
+  likes                  Like[]
+  sentFriendRequests     FriendRequest[] @relation("sentRequests")
+  receivedFriendRequests FriendRequest[] @relation("receivedRequests")
+  notifications          Notification[]  @relation("notificationsReceived")
+  notificationsSent      Notification[]  @relation("notificationsSent")
+
+  @@map("users")
+}
+
+model Post {
+  id        String   @id @default(uuid()) @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments      Comment[]
+  likes         Like[]
+  notifications Notification[]
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("comments")
+}
+
+// One like per user and per post
+model Like {
+  postId    String   @map("post_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@map("likes")
+}
+
+enum FriendRequestStatus {
+  pending
+  accepted
+
+  @@map("friend_request_status")
+}
+
+model FriendRequest {
+  id        String              @id @default(uuid()) @db.Uuid
+  fromId    String              @map("from_id") @db.Uuid
+  toId      String              @map("to_id") @db.Uuid
+  status    FriendRequestStatus @default(pending)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  from User @relation("sentRequests", fields: [fromId], references: [id], onDelete: Cascade)
+  to   User @relation("receivedRequests", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId])
+  @@map("friend_requests")
+}
+
+enum NotificationType {
+  like
+  comment
+
+  @@map("notification_type")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  fromId    String           @map("from_id") @db.Uuid
+  type      NotificationType
+  postId    String           @map("post_id") @db.Uuid
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation("notificationsReceived", fields: [userId], references: [id], onDelete: Cascade)
+  from User @relation("notificationsSent", fields: [fromId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}

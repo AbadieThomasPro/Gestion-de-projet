@@ -1,32 +1,27 @@
-import { readDb, writeDb } from '@/lib/db';
-import { getUserId, unauthorized } from '@/lib/auth';
+import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 import { addNotification } from '@/lib/notifications';
+import { requirePost } from '@/lib/posts';
+import { prisma } from '@/lib/prisma';
 
 // Like or unlike a post
-export function POST(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const POST = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
+  const post = await requirePost(params.id);
 
-  const db = readDb();
-  if (!db.posts.some((p) => p.id === params.id)) {
-    return Response.json({ error: 'Publication introuvable' }, { status: 404 });
-  }
+  const { count: removed } = await prisma.like.deleteMany({ where: { postId: post.id, userId } });
+  const liked = removed === 0;
 
-  const alreadyLiked = db.likes.some((l) => l.postId === params.id && l.userId === userId);
-
-  if (alreadyLiked) {
-    db.likes = db.likes.filter((l) => !(l.postId === params.id && l.userId === userId));
-    db.notifications = db.notifications.filter(
-      (n) => !(n.type === 'like' && n.postId === params.id && n.fromId === userId && !n.read)
-    );
+  if (liked) {
+    await prisma.like.createMany({ data: { postId: post.id, userId }, skipDuplicates: true });
+    await addNotification({ type: 'like', postId: post.id, fromId: userId });
   } else {
-    db.likes.push({ postId: params.id, userId });
-    addNotification(db, { type: 'like', postId: params.id, fromId: userId });
+    await prisma.notification.deleteMany({
+      where: { type: 'like', postId: post.id, fromId: userId, read: false },
+    });
   }
-  writeDb(db);
 
-  return Response.json({
-    liked: !alreadyLiked,
-    likesCount: db.likes.filter((l) => l.postId === params.id).length,
-  });
-}
+  const likesCount = await prisma.like.count({ where: { postId: post.id } });
+
+  return Response.json({ liked, likesCount });
+});

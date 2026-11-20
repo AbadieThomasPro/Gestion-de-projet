@@ -1,48 +1,33 @@
-import { readDb, writeDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
+import { publicUserSelect, requirePublicUser, requireUser } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
 import { getFriendStatus } from '@/lib/friends';
+import { withErrorHandler } from '@/lib/handler';
+import { prisma } from '@/lib/prisma';
+import { friendRequestSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validation';
 
 // Requests I received
-export function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
-  const db = readDb();
-  const requests = db.friendRequests
-    .filter((r) => r.toId === userId && r.status === 'pending')
-    .map((r) => ({
-      ...r,
-      from: publicUser(db.users.find((u) => u.id === r.fromId)),
-    }));
+  const requests = await prisma.friendRequest.findMany({
+    where: { toId: userId, status: 'pending' },
+    include: { from: { select: publicUserSelect } },
+    orderBy: { createdAt: 'desc' },
+  });
 
   return Response.json({ requests });
-}
+});
 
 // Send a request
-export async function POST(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const POST = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
+  const { toId } = await parseBody(request, friendRequestSchema);
 
-  const { toId } = await request.json();
-  const db = readDb();
+  await requirePublicUser(toId);
+  if ((await getFriendStatus(userId, toId)) !== 'none') throw new AppError('LL_FRIEND_REQUEST_409');
 
-  if (!db.users.some((u) => u.id === toId)) {
-    return Response.json({ error: 'Utilisateur introuvable' }, { status: 404 });
-  }
-  if (getFriendStatus(db, userId, toId) !== 'none') {
-    return Response.json({ error: 'Demande impossible' }, { status: 400 });
-  }
-
-  const friendRequest = {
-    id: crypto.randomUUID(),
-    fromId: userId,
-    toId,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-  };
-
-  db.friendRequests.push(friendRequest);
-  writeDb(db);
+  const friendRequest = await prisma.friendRequest.create({ data: { fromId: userId, toId } });
 
   return Response.json({ request: friendRequest }, { status: 201 });
-}
+});

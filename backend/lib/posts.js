@@ -1,19 +1,46 @@
-import { publicUser } from './auth';
+import { publicUserSelect } from './auth';
+import { AppError } from './errors';
+import { isUuid } from './ids';
+import { prisma } from './prisma';
 
-// Adds author, likes and comments count to a post
-export function formatPost(db, post, userId) {
-  const author = db.users.find((u) => u.id === post.authorId);
-  const likes = db.likes.filter((l) => l.postId === post.id);
-
+// Fields of a post sent to the client: author, likes and comments count, liked by the reader
+function postSelect(userId) {
   return {
-    ...post,
-    author: author ? publicUser(author) : null,
-    likesCount: likes.length,
-    likedByMe: likes.some((l) => l.userId === userId),
-    commentsCount: db.comments.filter((c) => c.postId === post.id).length,
+    id: true,
+    authorId: true,
+    content: true,
+    createdAt: true,
+    author: { select: publicUserSelect },
+    _count: { select: { likes: true, comments: true } },
+    likes: { where: { userId }, select: { userId: true } },
   };
 }
 
-export function sortByDate(list) {
-  return [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+function formatPost({ _count, likes, ...post }) {
+  return { ...post, likesCount: _count.likes, likedByMe: likes.length > 0, commentsCount: _count.comments };
+}
+
+// Posts from the most recent, with optional filter and pagination
+export async function listPosts({ userId, where, take, skip = 0 }) {
+  const posts = await prisma.post.findMany({
+    where,
+    select: postSelect(userId),
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take,
+    skip,
+  });
+  return posts.map(formatPost);
+}
+
+export async function getPost(postId, userId) {
+  const post = await prisma.post.findUnique({ where: { id: postId }, select: postSelect(userId) });
+  return post && formatPost(post);
+}
+
+// Id and author of an existing post, LL_POST_404 otherwise
+export async function requirePost(postId) {
+  const post =
+    isUuid(postId) && (await prisma.post.findUnique({ where: { id: postId }, select: { id: true, authorId: true } }));
+  if (!post) throw new AppError('LL_POST_404');
+  return post;
 }

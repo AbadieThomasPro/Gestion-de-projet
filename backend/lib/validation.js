@@ -1,0 +1,50 @@
+import { AppError } from './errors';
+
+// Zod issue -> stable code that the front can translate
+function issueCode(issue) {
+  switch (issue.code) {
+    case 'invalid_type':
+      return issue.received === 'undefined' || issue.received === 'null' ? 'REQUIRED' : 'INVALID_TYPE';
+    case 'too_small':
+      return issue.minimum === 1 && issue.type === 'string' ? 'REQUIRED' : 'TOO_SHORT';
+    case 'too_big':
+      return 'TOO_LONG';
+    case 'invalid_string':
+      return issue.validation === 'email' ? 'INVALID_EMAIL' : issue.validation === 'uuid' ? 'INVALID_ID' : 'INVALID_FORMAT';
+    case 'invalid_enum_value':
+      return 'INVALID_VALUE';
+    default:
+      return issue.params?.code || 'INVALID';
+  }
+}
+
+export function toFieldErrors(zodError) {
+  return zodError.issues.map((issue) => ({
+    field: issue.path.join('.') || 'body',
+    code: issueCode(issue),
+    message: issue.message,
+  }));
+}
+
+// Validates data with a Zod schema, throws LL_VALIDATION_422 with one entry per invalid field
+export function validate(schema, data) {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    throw new AppError('LL_VALIDATION_422', { errors: toFieldErrors(result.error) });
+  }
+  return result.data;
+}
+
+// Reads the JSON body of a request and validates it
+export async function parseBody(request, schema) {
+  let data;
+  try {
+    data = await request.json();
+  } catch {
+    throw new AppError('LL_VALIDATION_422', {
+      detail: "Le contenu envoyé n'est pas lisible.",
+      errors: [{ field: 'body', code: 'INVALID_JSON', message: "Le contenu envoyé n'est pas lisible." }],
+    });
+  }
+  return validate(schema, data);
+}

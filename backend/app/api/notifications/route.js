@@ -1,32 +1,27 @@
-import { readDb, writeDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
-import { sortByDate } from '@/lib/posts';
+import { publicUserSelect, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
+import { prisma } from '@/lib/prisma';
 
 // My notifications
-export function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
-  const db = readDb();
-  const notifications = sortByDate(db.notifications.filter((n) => n.userId === userId)).map((n) => ({
-    ...n,
-    from: publicUser(db.users.find((u) => u.id === n.fromId)),
-    postContent: db.posts.find((p) => p.id === n.postId)?.content,
-  }));
+  const list = await prisma.notification.findMany({
+    where: { userId },
+    include: { from: { select: publicUserSelect }, post: { select: { content: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const notifications = list.map(({ post, ...n }) => ({ ...n, postContent: post.content }));
 
   return Response.json({ notifications });
-}
+});
 
 // Mark all my notifications as read
-export function PUT(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const PUT = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
-  const db = readDb();
-  for (const n of db.notifications) {
-    if (n.userId === userId) n.read = true;
-  }
-  writeDb(db);
+  await prisma.notification.updateMany({ where: { userId }, data: { read: true } });
 
   return Response.json({ message: 'Notifications lues' });
-}
+});

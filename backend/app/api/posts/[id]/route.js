@@ -1,26 +1,18 @@
-import { readDb, writeDb } from '@/lib/db';
-import { getUserId, unauthorized } from '@/lib/auth';
+import { requireUser } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
+import { withErrorHandler } from '@/lib/handler';
+import { requirePost } from '@/lib/posts';
+import { prisma } from '@/lib/prisma';
 
 // Delete one of my posts
-export function DELETE(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const DELETE = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
+  const post = await requirePost(params.id);
 
-  const db = readDb();
-  const post = db.posts.find((p) => p.id === params.id);
+  if (post.authorId !== userId) throw new AppError('LL_AUTH_403');
 
-  if (!post) {
-    return Response.json({ error: 'Publication introuvable' }, { status: 404 });
-  }
-  if (post.authorId !== userId) {
-    return Response.json({ error: 'Vous ne pouvez supprimer que vos publications' }, { status: 403 });
-  }
-
-  db.posts = db.posts.filter((p) => p.id !== post.id);
-  db.likes = db.likes.filter((l) => l.postId !== post.id);
-  db.comments = db.comments.filter((c) => c.postId !== post.id);
-  db.notifications = db.notifications.filter((n) => n.postId !== post.id);
-  writeDb(db);
+  // Likes, comments and notifications of the post are deleted in cascade
+  await prisma.post.delete({ where: { id: post.id } });
 
   return Response.json({ message: 'Publication supprimée' });
-}
+});

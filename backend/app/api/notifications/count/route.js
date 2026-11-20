@@ -1,15 +1,15 @@
-import { readDb } from '@/lib/db';
-import { getUserId, unauthorized } from '@/lib/auth';
+import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
+import { prisma } from '@/lib/prisma';
 
 // Numbers shown in red in the navbar
-export function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
-  const db = readDb();
+  const [notifications, friendRequests] = await Promise.all([
+    prisma.notification.count({ where: { userId, read: false } }),
+    prisma.friendRequest.count({ where: { toId: userId, status: 'pending' } }),
+  ]);
 
-  return Response.json({
-    notifications: db.notifications.filter((n) => n.userId === userId && !n.read).length,
-    friendRequests: db.friendRequests.filter((r) => r.toId === userId && r.status === 'pending').length,
-  });
-}
+  return Response.json({ notifications, friendRequests });
+});

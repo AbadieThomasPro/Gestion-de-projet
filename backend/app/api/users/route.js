@@ -1,18 +1,28 @@
-import { readDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
+import { publicUserSelect, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
+import { prisma } from '@/lib/prisma';
 
 // Search users by name
-export function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
-  const search = (new URL(request.url).searchParams.get('search') || '').trim().toLowerCase();
+  const search = (new URL(request.url).searchParams.get('search') || '').trim();
   if (!search) return Response.json({ users: [] });
 
-  const users = readDb()
-    .users.filter((u) => u.id !== userId)
-    .filter((u) => `${u.firstName} ${u.lastName}`.toLowerCase().includes(search))
-    .map(publicUser);
+  // Every word must match the first or the last name ("Chloé Dur" finds Chloé Durand)
+  const words = search.split(/\s+/);
+  const users = await prisma.user.findMany({
+    where: {
+      id: { not: userId },
+      AND: words.map((word) => ({
+        OR: [
+          { firstName: { contains: word, mode: 'insensitive' } },
+          { lastName: { contains: word, mode: 'insensitive' } },
+        ],
+      })),
+    },
+    select: publicUserSelect,
+  });
 
   return Response.json({ users });
-}
+});
