@@ -1,7 +1,7 @@
 // Demonstration data. Can be run several times: existing demo accounts are kept.
 import bcrypt from 'bcryptjs';
 import { inArray } from 'drizzle-orm';
-import { comments, db, likes, pool, posts, users } from './index.js';
+import { comments, db, likes, pool, posts, users, zones } from './index.js';
 
 const PASSWORD = 'localloop';
 
@@ -19,9 +19,12 @@ if (existing.length > 0) {
   console.log('Demo data already present, nothing to do');
 } else {
   const password = await bcrypt.hash(PASSWORD, 10);
+  // Pilot zones are created by the migrations
+  const [saintMichel, saintCyprien] = await db.select().from(zones).orderBy(zones.id).limit(2);
+  const zoneOf = { 'gerard@localloop.dev': saintMichel, 'karim@localloop.dev': saintMichel };
   const [gerard, ines, chloe, karim] = await db
     .insert(users)
-    .values(DEMO_USERS.map((u) => ({ ...u, password })))
+    .values(DEMO_USERS.map((u) => ({ ...u, password, zoneId: (zoneOf[u.email] || saintCyprien).id })))
     .returning();
 
   const [vide, potager, fete] = await db

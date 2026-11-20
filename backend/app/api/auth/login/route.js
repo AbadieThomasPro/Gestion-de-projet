@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { db, users } from '@/db';
-import { createToken, publicUser } from '@/lib/auth';
+import { createToken, findPublicUser } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { withErrorHandler } from '@/lib/handler';
 import { loginSchema } from '@/lib/schemas';
@@ -17,5 +17,5 @@ export const POST = withErrorHandler(async (request) => {
     throw new AppError('LL_LOGIN_401');
   }
 
-  return Response.json({ token: createToken(user), user: publicUser(user) });
+  return Response.json({ token: createToken(user), user: await findPublicUser(user.id) });
 });

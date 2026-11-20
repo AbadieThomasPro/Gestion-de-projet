@@ -32,3 +32,4 @@ Les erreurs suivent le format `application/problem+json` décrit dans [ERRORS.md
 | GET | `/api/users/[id]/stats` | Oui | Statistics of a user: posts, likes and comments received, current streak |
 | PUT | `/api/users/me` | Oui | Edit my profile |
 | GET | `/api/users` | Oui | Search users by name |
+| GET | `/api/zones` | Non | Neighbourhoods that can be chosen at registration (public: needed before having an account) |

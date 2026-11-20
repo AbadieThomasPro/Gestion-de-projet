@@ -97,6 +97,7 @@ npm run dev                                # lance front + back
 | `npm run dev` | Lance front + back en mode dev |
 | `npm run docs` | Régénère la doc de l'API ([docs/API.md](docs/API.md)) |
 | `npm test` | Tests unitaires et d'intégration (Vitest, back puis front) |
+| `npm run storybook -w frontend` | Catalogue des composants sur http://localhost:6006 (viewport 800×600 par défaut) |
 | `npm run test:e2e` | Tests E2E Playwright en 800×600 (lance front et back) |
 | `npm run db:migrate -w backend` | Applique les migrations PostgreSQL |
 | `npm run db:generate -w backend` | Génère une migration après modification du schéma |
