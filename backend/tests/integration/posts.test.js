@@ -3,7 +3,6 @@ import { GET as feed, POST as publish } from '@/app/api/posts/route';
 import { DELETE as remove } from '@/app/api/posts/[id]/route';
 import { POST as like } from '@/app/api/posts/[id]/like/route';
 import { POST as comment } from '@/app/api/posts/[id]/comments/route';
-import { GET as notifications } from '@/app/api/notifications/route';
 import { GET as stats } from '@/app/api/users/[id]/stats/route';
 import { createUser, request, resetDb } from '../helpers';
 
@@ -48,7 +47,7 @@ describe('posts', () => {
     expect(page2.hasMore).toBe(false);
   });
 
-  it('counts likes and comments, and notifies the author', async () => {
+  it('counts likes and comments', async () => {
     const author = await createUser('Author');
     const reader = await createUser('Reader');
     const post = await createPost(author.token);
@@ -69,10 +68,6 @@ describe('posts', () => {
       })
     ).json();
     expect(userStats).toMatchObject({ posts: 1, likesReceived: 1, commentsReceived: 1, currentStreak: 1 });
-
-    const list = (await (await notifications(request('/api/notifications', { token: author.token }))).json())
-      .notifications;
-    expect(list.map((n) => n.type).sort()).toEqual(['comment', 'like']);
   });
 
   it('unlikes on the second like', async () => {

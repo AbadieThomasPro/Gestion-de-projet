@@ -57,7 +57,3 @@ export const profileSchema = z.object({
     .union([z.literal(''), z.string().trim().url("L'avatar doit être une adresse web.").max(500)])
     .optional(),
 });
-
-export const friendRequestSchema = z.object({
-  toId: z.string(required("L'utilisateur")).uuid("L'utilisateur est invalide."),
-});

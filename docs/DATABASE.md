@@ -28,10 +28,6 @@ erDiagram
     posts ||--o{ comments : contient
     users ||--o{ likes : aime
     posts ||--o{ likes : recoit
-    users ||--o{ friend_requests : envoie
-    users ||--o{ friend_requests : recoit
-    users ||--o{ notifications : recoit
-    posts ||--o{ notifications : concerne
 ```
 
 ## Dictionnaire des données
@@ -91,29 +87,7 @@ Aucune adresse n'est stockée (RGPD, persona Chloé) : seul le quartier est conn
 
 La clé primaire composée garantit un seul like par utilisateur et par publication.
 
-### friend_requests
-
-| Colonne | Type | Contraintes | Description |
-|---|---|---|---|
-| id | uuid | PK | Identifiant |
-| from_id | uuid | FK users, cascade | Demandeur |
-| to_id | uuid | FK users, cascade | Destinataire |
-| status | enum `pending`, `accepted` | non nul, défaut `pending` | État |
-| created_at | timestamptz | non nul | Date |
-
-Unicité sur (from_id, to_id).
-
-### notifications
-
-| Colonne | Type | Contraintes | Description |
-|---|---|---|---|
-| id | uuid | PK | Identifiant |
-| user_id | uuid | FK users, cascade, indexé | Destinataire |
-| from_id | uuid | FK users, cascade | Auteur de l'action |
-| type | enum `like`, `comment` | non nul | Type d'action |
-| post_id | uuid | FK posts, cascade | Publication concernée |
-| read | boolean | non nul, défaut `false` | Lue ou non |
-| created_at | timestamptz | non nul | Date |
+> Le module Amis a été retiré (LL-235) et les notifications sont reportées en V2 : les tables `friend_requests` et `notifications` sont supprimées par la migration `remove_friends_notifications`.
 
 ## Modifier le schéma
 

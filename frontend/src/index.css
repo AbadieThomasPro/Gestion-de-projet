@@ -232,45 +232,6 @@ button:disabled {
   font-weight: bold;
 }
 
-/* Friends */
-.user-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-}
-
-.user-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-
-/* Notifications */
-.badge-red {
-  display: inline-block;
-  min-width: 18px;
-  padding: 1px 6px;
-  margin-left: 2px;
-  border-radius: 10px;
-  background: #e41e3f;
-  color: white;
-  font-size: 12px;
-  text-align: center;
-}
-
-.notification {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border-radius: 8px;
-}
-
-.notification.unread {
-  background: #e7f3ff;
-}
-
 /* Profile statistics */
 .stats-grid {
   display: grid;

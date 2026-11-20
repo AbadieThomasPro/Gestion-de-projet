@@ -11,7 +11,7 @@ export default async function setup() {
   const client = new pg.Client({ connectionString: DATABASE_URL });
   await client.connect();
   await client.query(
-    'truncate table notifications, likes, comments, friend_requests, posts, users restart identity cascade'
+    'truncate table likes, comments, posts, users restart identity cascade'
   );
   await client.end();
 }

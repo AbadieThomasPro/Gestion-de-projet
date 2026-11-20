@@ -1,6 +1,5 @@
 import { publicUserSelect, requireUser } from '@/lib/auth';
 import { withErrorHandler } from '@/lib/handler';
-import { addNotification } from '@/lib/notifications';
 import { requirePost } from '@/lib/posts';
 import { prisma } from '@/lib/prisma';
 import { commentSchema } from '@/lib/schemas';
@@ -32,7 +31,6 @@ export const POST = withErrorHandler(async (request, { params }) => {
     data: { postId: post.id, authorId: userId, content },
     include: withAuthor,
   });
-  await addNotification({ type: 'comment', postId: post.id, fromId: userId });
 
   return Response.json({ comment }, { status: 201 });
 });
