@@ -9,6 +9,8 @@ Réseau social inspiré de Facebook : **React** (frontend) + **Next.js** (API ba
 
 📋 **Backlog Notion :** [Facebook like — Backlog](https://app.notion.com/p/TrustSign-be7f6c85647e452898f97fe4be416485?source=copy_link)
 
+🗂️ **Backlog par sprint :** [docs/backlog](docs/backlog/README.md) (ordre de réalisation, dépendances et statut vérifié dans le code)
+
 ## Sommaire
 
 - [Contexte](#-contexte)
@@ -200,6 +202,7 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 | Document | Contenu |
 |---|---|
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branches, commits, Pull Requests, versions |
+| [docs/backlog](docs/backlog/README.md) | Backlog par sprint, ordre de réalisation et dépendances |
 | [docs/PERSONAS.md](docs/PERSONAS.md) | Nos 3 personas et leurs besoins |
 | [docs/STORYMAP.md](docs/STORYMAP.md) | Parcours utilisateur et découpage en releases |
 | [docs/API.md](docs/API.md) | Routes de l'API (générée automatiquement) |
