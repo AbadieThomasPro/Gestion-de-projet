@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, develop, dev]
+    branches: [main, develop]
 
 # Cancels the previous run if a new commit is pushed on the same branch
 concurrency:

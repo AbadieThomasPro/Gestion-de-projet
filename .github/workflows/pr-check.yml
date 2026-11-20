@@ -13,7 +13,7 @@ jobs:
         env:
           BRANCH: ${{ github.head_ref }}
         run: |
-          regex='^((feature|fix|hotfix)/[A-Za-z0-9._-]+|release/[0-9]+\.[0-9]+\.[0-9]+|develop|dev)$'
+          regex='^((feature|fix|hotfix)/[A-Za-z0-9._-]+|release/[0-9]+\.[0-9]+\.[0-9]+|develop)$'
           if [[ ! "$BRANCH" =~ $regex ]]; then
             echo "::error::Branch '$BRANCH' must look like feature/xxx, fix/xxx, hotfix/xxx or release/x.y.z"
             exit 1
