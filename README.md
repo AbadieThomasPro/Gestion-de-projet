@@ -99,20 +99,21 @@ npm run dev                                # lance front + back
 | `npm test` | Tests unitaires et d'intégration (Vitest, back puis front) |
 | `npm run storybook -w frontend` | Catalogue des composants sur http://localhost:6006 (viewport 800×600 par défaut) |
 | `npm run test:e2e` | Tests E2E Playwright en 800×600 (lance front et back) |
-| `npm run db:migrate -w backend` | Applique les migrations PostgreSQL |
-| `npm run db:generate -w backend` | Génère une migration après modification du schéma |
+| `npm run db:migrate -w backend` | Applique les migrations PostgreSQL (`prisma migrate deploy`) |
+| `npm run db:migrate:dev -w backend -- --name <nom>` | Crée une migration après modification de `schema.prisma` |
+| `npm run db:studio -w backend` | Ouvre Prisma Studio pour consulter les données |
 | `npm run db:seed -w backend` | Ajoute les données de démonstration |
 
 Les tests d'intégration du back utilisent la base `localloop_test` (variable `TEST_DATABASE_URL`) et les tests E2E la base `localloop_e2e` (`E2E_DATABASE_URL`) : les deux sont vidées pendant les tests, ne jamais y mettre la base de développement.
 
-Le schéma et le choix de l'ORM (Drizzle) sont décrits dans [docs/DATABASE.md](docs/DATABASE.md).
+Le schéma et l'ORM (Prisma) sont décrits dans [docs/DATABASE.md](docs/DATABASE.md).
 
 ### Structure
 
 ```text
 Gestion-de-projet/
 ├── frontend/   # React + Vite (servi par nginx en production)
-├── backend/    # Next.js (routes API dans app/api/, base dans db/)
+├── backend/    # Next.js (routes API dans app/api/, schéma Prisma dans prisma/)
 ├── docs/       # Personas, story map, doc de l'API…
 ├── scripts/    # Génération de la doc de l'API
 └── .github/    # CI/CD et automations

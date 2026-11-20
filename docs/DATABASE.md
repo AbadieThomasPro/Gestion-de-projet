@@ -1,18 +1,22 @@
 # Base de données
 
-PostgreSQL 16, schéma décrit dans [`backend/db/schema.js`](../backend/db/schema.js) et versionné dans [`backend/db/migrations`](../backend/db/migrations).
+PostgreSQL 16, schéma décrit dans [`backend/prisma/schema.prisma`](../backend/prisma/schema.prisma) et versionné dans [`backend/prisma/migrations`](../backend/prisma/migrations).
 
-## Choix de l'ORM : Drizzle
+## ORM : Prisma
 
-| Critère | Drizzle | Prisma |
-|---|---|---|
-| Moteur | Pur JavaScript, au-dessus du driver `pg` | Moteur binaire à télécharger selon la plateforme |
-| Image Docker | Rien à ajouter à `node:20-alpine` | Binaire spécifique à musl, génération du client au build |
-| Requêtes | Proches du SQL (jointures, sous-requêtes) | API plus abstraite, SQL brut pour les cas avancés |
-| Migrations | Fichiers SQL lisibles, générés depuis le schéma | Fichiers SQL générés depuis `schema.prisma` |
-| Langage du schéma | JavaScript, comme le reste du projet | DSL propre à Prisma |
+L'accès à la base passe par **Prisma 7** (`@prisma/client` avec l'adaptateur `@prisma/adapter-pg`) :
 
-Drizzle est retenu : pas de binaire à gérer dans les conteneurs et la CI, des requêtes qui restent lisibles pour quelqu'un qui connaît le SQL (utile pour le stagiaire et les reviews), et un schéma écrit dans le même langage que l'API.
+| Élément | Où |
+|---|---|
+| Schéma (modèles, relations, contraintes) | `backend/prisma/schema.prisma` |
+| Configuration (URL de la base, dossier des migrations, seed) | `backend/prisma.config.js` |
+| Migrations SQL versionnées | `backend/prisma/migrations` |
+| Client partagé par les routes | `backend/lib/prisma.js` (`import { prisma } from '@/lib/prisma'`) |
+| Données de démonstration | `backend/prisma/seed.js` |
+
+Pourquoi Prisma : schéma déclaratif lisible par toute l'équipe, client généré avec autocomplétion, migrations générées et appliquées par la même commande, et Prisma Studio (`npm run db:studio -w backend`) pour consulter les données. Les noms des modèles sont en anglais et en camelCase côté code (`User.firstName`), et en snake_case côté base (`users.first_name`, via `@map` et `@@map`).
+
+Le client est généré automatiquement après `npm install` (`postinstall`). Après une modification du schéma sans nouvelle installation, lancer `npx prisma generate` dans `backend/`.
 
 ## Modèle conceptuel
 
@@ -101,9 +105,11 @@ Unicité sur (from_id, to_id).
 
 ## Modifier le schéma
 
-1. Modifier `backend/db/schema.js`.
-2. Générer la migration : `npm run db:generate -w backend -- --name <description>`.
-3. Relire le fichier SQL créé dans `backend/db/migrations`, puis l'appliquer : `npm run db:migrate -w backend`.
+1. Modifier `backend/prisma/schema.prisma`.
+2. Créer et appliquer la migration sur la base de développement : `npm run db:migrate:dev -w backend -- --name <description>` (le client Prisma est régénéré au passage).
+3. Relire le fichier `migration.sql` créé dans `backend/prisma/migrations`.
 4. Commiter le schéma **et** la migration dans le même commit (`feat(database): ...`).
+
+En CI, dans le conteneur et pour les bases de test, les migrations sont appliquées par `npm run db:migrate -w backend` (`prisma migrate deploy`), qui ne crée jamais de migration.
 
 Une migration déjà fusionnée dans `develop` ne se modifie plus : on en crée une nouvelle.
