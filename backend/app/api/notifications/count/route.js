@@ -1,10 +1,10 @@
+import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 import { prisma } from '@/lib/prisma';
-import { getUserId, unauthorized } from '@/lib/auth';
 
 // Numbers shown in red in the navbar
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const [notifications, friendRequests] = await Promise.all([
     prisma.notification.count({ where: { userId, read: false } }),
@@ -12,4 +12,4 @@ export async function GET(request) {
   ]);
 
   return Response.json({ notifications, friendRequests });
-}
+});

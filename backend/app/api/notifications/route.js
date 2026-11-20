@@ -1,10 +1,10 @@
+import { publicUserSelect, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 import { prisma } from '@/lib/prisma';
-import { getUserId, publicUserSelect, unauthorized } from '@/lib/auth';
 
 // My notifications
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const list = await prisma.notification.findMany({
     where: { userId },
@@ -15,14 +15,13 @@ export async function GET(request) {
   const notifications = list.map(({ post, ...n }) => ({ ...n, postContent: post.content }));
 
   return Response.json({ notifications });
-}
+});
 
 // Mark all my notifications as read
-export async function PUT(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const PUT = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   await prisma.notification.updateMany({ where: { userId }, data: { read: true } });
 
   return Response.json({ message: 'Notifications lues' });
-}
+});

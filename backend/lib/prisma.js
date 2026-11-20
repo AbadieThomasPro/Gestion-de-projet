@@ -12,3 +12,13 @@ function createClient() {
 const globalForPrisma = globalThis;
 export const prisma = globalForPrisma.prisma ?? createClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+// Unique constraint violated (ex: two accounts with the same email created at the same time)
+export function isUniqueViolation(error) {
+  return error?.code === 'P2002';
+}
+
+// Record to update or delete not found
+export function isNotFound(error) {
+  return error?.code === 'P2025';
+}

@@ -19,6 +19,7 @@ h3 {
 }
 
 input,
+select,
 textarea {
   width: 100%;
   padding: 10px;
@@ -298,4 +299,17 @@ button:disabled {
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.field-label {
+  display: block;
+  text-align: left;
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.zone {
+  color: #65676b;
+  margin: 4px 0;
 }

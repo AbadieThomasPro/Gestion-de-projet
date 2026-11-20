@@ -1,17 +1,13 @@
-import { prisma } from '@/lib/prisma';
-import { getUserId, unauthorized } from '@/lib/auth';
+import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 import { addNotification } from '@/lib/notifications';
-import { isUuid } from '@/lib/ids';
+import { requirePost } from '@/lib/posts';
+import { prisma } from '@/lib/prisma';
 
 // Like or unlike a post
-export async function POST(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
-
-  const post = isUuid(params.id) && (await prisma.post.findUnique({ where: { id: params.id } }));
-  if (!post) {
-    return Response.json({ error: 'Publication introuvable' }, { status: 404 });
-  }
+export const POST = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
+  const post = await requirePost(params.id);
 
   const { count: removed } = await prisma.like.deleteMany({ where: { postId: post.id, userId } });
   const liked = removed === 0;
@@ -28,4 +24,4 @@ export async function POST(request, { params }) {
   const likesCount = await prisma.like.count({ where: { postId: post.id } });
 
   return Response.json({ liked, likesCount });
-}
+});

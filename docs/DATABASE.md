@@ -22,6 +22,7 @@ Le client est généré automatiquement après `npm install` (`postinstall`). Ap
 
 ```mermaid
 erDiagram
+    zones ||--o{ users : regroupe
     users ||--o{ posts : publie
     users ||--o{ comments : ecrit
     posts ||--o{ comments : contient
@@ -35,6 +36,16 @@ erDiagram
 
 ## Dictionnaire des données
 
+### zones
+
+| Colonne | Type | Contraintes | Description |
+|---|---|---|---|
+| id | serial | PK | Identifiant |
+| name | text | non nul | Nom du quartier |
+| city | text | non nul | Ville |
+
+Unicité sur (name, city). La zone pilote (5 quartiers de Toulouse) est insérée par la migration `pilot_zones` : ce sont des données de référence, présentes dans tous les environnements.
+
 ### users
 
 | Colonne | Type | Contraintes | Description |
@@ -46,9 +57,10 @@ erDiagram
 | password | text | non nul | Hash bcrypt, jamais renvoyé par l'API |
 | bio | text | non nul, défaut `''` | Présentation |
 | avatar | text | non nul, défaut `''` | URL de l'avatar |
+| zone_id | integer | FK zones, restrict, nullable | Quartier choisi à l'inscription (obligatoire à l'inscription, null pour les comptes plus anciens) |
 | created_at | timestamptz | non nul, défaut `now()` | Date d'inscription |
 
-Aucune adresse n'est stockée (RGPD, persona Chloé).
+Aucune adresse n'est stockée (RGPD, persona Chloé) : seul le quartier est connu, et c'est la seule information de localisation visible sur un profil.
 
 ### posts
 

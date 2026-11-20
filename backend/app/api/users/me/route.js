@@ -1,21 +1,21 @@
-import { prisma } from '@/lib/prisma';
-import { findPublicUser, getUserId, publicUserSelect, unauthorized } from '@/lib/auth';
+import { publicUserSelect, requireUser } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
+import { withErrorHandler } from '@/lib/handler';
+import { isNotFound, prisma } from '@/lib/prisma';
+import { profileSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validation';
 
 // Edit my profile
-export async function PUT(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const PUT = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
+  const data = await parseBody(request, profileSchema);
 
-  const { firstName, lastName, bio, avatar } = await request.json();
-  if (!(await findPublicUser(userId))) return unauthorized();
-
-  const data = {};
-  if (firstName?.trim()) data.firstName = firstName.trim();
-  if (lastName?.trim()) data.lastName = lastName.trim();
-  if (bio !== undefined) data.bio = String(bio).trim();
-  if (avatar !== undefined) data.avatar = String(avatar).trim();
-
-  const user = await prisma.user.update({ where: { id: userId }, data, select: publicUserSelect });
-
-  return Response.json({ user });
-}
+  try {
+    const user = await prisma.user.update({ where: { id: userId }, data, select: publicUserSelect });
+    return Response.json({ user });
+  } catch (error) {
+    // Account deleted since the token was created
+    if (isNotFound(error)) throw new AppError('LL_AUTH_401');
+    throw error;
+  }
+});

@@ -1,12 +1,14 @@
-import { prisma } from '@/lib/prisma';
-import { findPublicUser, getUserId, publicUserSelect, unauthorized } from '@/lib/auth';
+import { publicUserSelect, requirePublicUser, requireUser } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
 import { getFriendStatus } from '@/lib/friends';
-import { isUuid } from '@/lib/ids';
+import { withErrorHandler } from '@/lib/handler';
+import { prisma } from '@/lib/prisma';
+import { friendRequestSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validation';
 
 // Requests I received
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const requests = await prisma.friendRequest.findMany({
     where: { toId: userId, status: 'pending' },
@@ -15,23 +17,17 @@ export async function GET(request) {
   });
 
   return Response.json({ requests });
-}
+});
 
 // Send a request
-export async function POST(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const POST = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
+  const { toId } = await parseBody(request, friendRequestSchema);
 
-  const { toId } = await request.json();
-
-  if (!isUuid(toId) || !(await findPublicUser(toId))) {
-    return Response.json({ error: 'Utilisateur introuvable' }, { status: 404 });
-  }
-  if ((await getFriendStatus(userId, toId)) !== 'none') {
-    return Response.json({ error: 'Demande impossible' }, { status: 400 });
-  }
+  await requirePublicUser(toId);
+  if ((await getFriendStatus(userId, toId)) !== 'none') throw new AppError('LL_FRIEND_REQUEST_409');
 
   const friendRequest = await prisma.friendRequest.create({ data: { fromId: userId, toId } });
 
   return Response.json({ request: friendRequest }, { status: 201 });
-}
+});

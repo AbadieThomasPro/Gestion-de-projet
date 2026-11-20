@@ -1,10 +1,10 @@
+import { publicUserSelect, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 import { prisma } from '@/lib/prisma';
-import { getUserId, publicUserSelect, unauthorized } from '@/lib/auth';
 
 // Search users by name
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const search = (new URL(request.url).searchParams.get('search') || '').trim();
   if (!search) return Response.json({ users: [] });
@@ -25,4 +25,4 @@ export async function GET(request) {
   });
 
   return Response.json({ users });
-}
+});

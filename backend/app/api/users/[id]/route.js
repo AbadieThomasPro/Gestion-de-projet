@@ -1,17 +1,12 @@
-import { findPublicUser, getUserId, unauthorized } from '@/lib/auth';
-import { listPosts } from '@/lib/posts';
+import { requirePublicUser, requireUser } from '@/lib/auth';
 import { getFriendStatus } from '@/lib/friends';
-import { isUuid } from '@/lib/ids';
+import { withErrorHandler } from '@/lib/handler';
+import { listPosts } from '@/lib/posts';
 
 // Profile of a user with their posts
-export async function GET(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
-
-  const user = isUuid(params.id) ? await findPublicUser(params.id) : null;
-  if (!user) {
-    return Response.json({ error: 'Utilisateur introuvable' }, { status: 404 });
-  }
+export const GET = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
+  const user = await requirePublicUser(params.id);
 
   const [posts, friendStatus] = await Promise.all([
     listPosts({ userId, where: { authorId: user.id } }),
@@ -19,4 +14,4 @@ export async function GET(request, { params }) {
   ]);
 
   return Response.json({ user, posts, friendStatus });
-}
+});

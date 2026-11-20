@@ -1,39 +1,34 @@
-import { prisma } from '@/lib/prisma';
-import { getUserId, unauthorized } from '@/lib/auth';
+import { requireUser } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
+import { withErrorHandler } from '@/lib/handler';
 import { isUuid } from '@/lib/ids';
+import { prisma } from '@/lib/prisma';
 
-// Pending request received by the user
+// Pending request received by the user, LL_FRIEND_REQUEST_404 for an invalid id
 function pendingRequest(id, userId) {
+  if (!isUuid(id)) throw new AppError('LL_FRIEND_REQUEST_404');
   return { id, toId: userId, status: 'pending' };
 }
 
-function notFound() {
-  return Response.json({ error: 'Demande introuvable' }, { status: 404 });
-}
-
 // Accept a request
-export async function PUT(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
-  if (!isUuid(params.id)) return notFound();
+export const PUT = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
 
   const { count } = await prisma.friendRequest.updateMany({
     where: pendingRequest(params.id, userId),
     data: { status: 'accepted' },
   });
-  if (count === 0) return notFound();
+  if (count === 0) throw new AppError('LL_FRIEND_REQUEST_404');
 
   return Response.json({ request: await prisma.friendRequest.findUnique({ where: { id: params.id } }) });
-}
+});
 
 // Refuse a request
-export async function DELETE(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
-  if (!isUuid(params.id)) return notFound();
+export const DELETE = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
 
   const { count } = await prisma.friendRequest.deleteMany({ where: pendingRequest(params.id, userId) });
-  if (count === 0) return notFound();
+  if (count === 0) throw new AppError('LL_FRIEND_REQUEST_404');
 
   return Response.json({ message: 'Demande refusée' });
-}
+});

@@ -1,4 +1,6 @@
 import { publicUserSelect } from './auth';
+import { AppError } from './errors';
+import { isUuid } from './ids';
 import { prisma } from './prisma';
 
 // Fields of a post sent to the client: author, likes and comments count, liked by the reader
@@ -33,4 +35,12 @@ export async function listPosts({ userId, where, take, skip = 0 }) {
 export async function getPost(postId, userId) {
   const post = await prisma.post.findUnique({ where: { id: postId }, select: postSelect(userId) });
   return post && formatPost(post);
+}
+
+// Id and author of an existing post, LL_POST_404 otherwise
+export async function requirePost(postId) {
+  const post =
+    isUuid(postId) && (await prisma.post.findUnique({ where: { id: postId }, select: { id: true, authorId: true } }));
+  if (!post) throw new AppError('LL_POST_404');
+  return post;
 }

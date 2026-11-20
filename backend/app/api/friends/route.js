@@ -1,10 +1,10 @@
+import { publicUserSelect, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 import { prisma } from '@/lib/prisma';
-import { getUserId, publicUserSelect, unauthorized } from '@/lib/auth';
 
 // List of my friends
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const accepted = { status: 'accepted' };
   const friends = await prisma.user.findMany({
@@ -18,4 +18,4 @@ export async function GET(request) {
   });
 
   return Response.json({ friends });
-}
+});
