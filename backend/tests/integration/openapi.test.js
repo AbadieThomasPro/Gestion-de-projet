@@ -4,6 +4,8 @@ import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ERRORS } from "@/lib/errors";
 import { buildOpenApiDocument } from "@/lib/openapi";
+import { prisma } from "@/lib/prisma";
+import * as events from "@/app/api/events/route";
 import * as posts from "@/app/api/posts/route";
 import * as post from "@/app/api/posts/[id]/route";
 import * as like from "@/app/api/posts/[id]/like/route";
@@ -149,6 +151,49 @@ describe("errors sent by the API are the documented ones", () => {
           id(c.post.id),
         ),
       "LL_VALIDATION_422",
+    ],
+    [
+      "get",
+      "/api/events",
+      () => events.GET(request("/api/events")),
+      "LL_AUTH_401",
+    ],
+    [
+      "post",
+      "/api/events",
+      (c) =>
+        events.POST(
+          request("/api/events", {
+            method: "POST",
+            token: c.author.token,
+            body: {},
+          }),
+        ),
+      "LL_VALIDATION_422",
+    ],
+    [
+      "post",
+      "/api/events",
+      async (c) => {
+        // Account created before the zones
+        await prisma.user.update({
+          where: { id: c.other.user.id },
+          data: { zoneId: null },
+        });
+        return events.POST(
+          request("/api/events", {
+            method: "POST",
+            token: c.other.token,
+            body: {
+              title: "Fête des voisins",
+              description: "Chacun apporte un plat.",
+              place: "Place du Salin",
+              startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+            },
+          }),
+        );
+      },
+      "LL_ZONE_404",
     ],
     [
       "get",

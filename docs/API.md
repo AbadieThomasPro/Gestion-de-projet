@@ -12,6 +12,8 @@ Les erreurs suivent le format `application/problem+json` décrit dans [ERRORS.md
 | POST | `/api/auth/register` | Non | Create an account |
 | GET | `/api/docs/assets/[file]` | Non | Files of Swagger UI, served by the API so the doc works without internet access |
 | GET | `/api/docs` | Non | Swagger UI |
+| GET | `/api/events` | Oui | Upcoming events of my neighbourhood, 10 per page (?page=1) |
+| POST | `/api/events` | Oui | Create an event in my neighbourhood |
 | GET | `/api/health` | Non | Check that the API is running |
 | GET | `/api/openapi.json` | Non | OpenAPI document of the API |
 | GET | `/api/posts/[id]/comments` | Oui | Comments of a post |
