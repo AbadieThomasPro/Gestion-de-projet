@@ -1,13 +1,15 @@
 import { and, eq } from 'drizzle-orm';
 import { db, friendRequests, users } from '@/db';
-import { findPublicUser, getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
+import { findPublicUser, publicUserColumns, requireUser } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
 import { getFriendStatus } from '@/lib/friends';
-import { isUuid } from '@/lib/ids';
+import { withErrorHandler } from '@/lib/handler';
+import { friendRequestSchema } from '@/lib/schemas';
+import { parseBody } from '@/lib/validation';
 
 // Requests I received
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const requests = await db
     .select({
@@ -23,23 +25,17 @@ export async function GET(request) {
     .where(and(eq(friendRequests.toId, userId), eq(friendRequests.status, 'pending')));
 
   return Response.json({ requests });
-}
+});
 
 // Send a request
-export async function POST(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const POST = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
+  const { toId } = await parseBody(request, friendRequestSchema);
 
-  const { toId } = await request.json();
-
-  if (!isUuid(toId) || !(await findPublicUser(toId))) {
-    return Response.json({ error: 'Utilisateur introuvable' }, { status: 404 });
-  }
-  if ((await getFriendStatus(userId, toId)) !== 'none') {
-    return Response.json({ error: 'Demande impossible' }, { status: 400 });
-  }
+  if (!(await findPublicUser(toId))) throw new AppError('LL_USER_404');
+  if ((await getFriendStatus(userId, toId)) !== 'none') throw new AppError('LL_FRIEND_REQUEST_409');
 
   const [friendRequest] = await db.insert(friendRequests).values({ fromId: userId, toId }).returning();
 
   return Response.json({ request: friendRequest }, { status: 201 });
-}
+});

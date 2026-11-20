@@ -29,8 +29,10 @@ describe('posts', () => {
   it('refuses an empty post', async () => {
     const { token } = await createUser();
     const res = await publish(request('/api/posts', { method: 'POST', token, body: { content: '  ' } }));
+    const body = await res.json();
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
+    expect(body.errors).toEqual([{ field: 'content', code: 'REQUIRED', message: 'La publication est vide.' }]);
   });
 
   it('paginates the feed by 10', async () => {

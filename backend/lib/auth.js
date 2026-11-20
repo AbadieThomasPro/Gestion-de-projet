@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 import { db, users } from '@/db';
+import { AppError } from './errors';
+import { isUuid } from './ids';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
@@ -21,8 +23,11 @@ export function getUserId(request) {
   }
 }
 
-export function unauthorized() {
-  return Response.json({ error: 'Vous devez être connecté' }, { status: 401 });
+// Id of the logged user, LL_AUTH_401 if the token is missing or invalid
+export function requireUser(request) {
+  const userId = getUserId(request);
+  if (!userId) throw new AppError('LL_AUTH_401');
+  return userId;
 }
 
 // Columns of a user that can be sent to the client (never the password)
@@ -44,5 +49,12 @@ export function publicUser(user) {
 
 export async function findPublicUser(id) {
   const [user] = await db.select(publicUserColumns).from(users).where(eq(users.id, id));
+  return user;
+}
+
+// Public profile of an existing user, LL_USER_404 otherwise
+export async function requirePublicUser(id) {
+  const user = isUuid(id) ? await findPublicUser(id) : null;
+  if (!user) throw new AppError('LL_USER_404');
   return user;
 }

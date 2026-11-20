@@ -1,11 +1,11 @@
 import { and, eq, or } from 'drizzle-orm';
 import { db, friendRequests, users } from '@/db';
-import { getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
+import { publicUserColumns, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 
 // List of my friends
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const friends = await db
     .select(publicUserColumns)
@@ -20,4 +20,4 @@ export async function GET(request) {
     .where(eq(friendRequests.status, 'accepted'));
 
   return Response.json({ friends });
-}
+});

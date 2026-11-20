@@ -1,6 +1,8 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { db, posts, users } from '@/db';
 import { publicUserColumns } from './auth';
+import { AppError } from './errors';
+import { isUuid } from './ids';
 
 // Drizzle writes posts.id as a bare "id" in subqueries, which would point to comments.id
 const POST_ID = sql.raw('"posts"."id"');
@@ -36,5 +38,13 @@ export function listPosts({ userId, where, limit, offset = 0 }) {
 
 export async function getPost(postId, userId) {
   const [post] = await listPosts({ userId, where: eq(posts.id, postId), limit: 1 });
+  return post;
+}
+
+// Id of an existing post, LL_POST_404 otherwise
+export async function requirePostId(postId) {
+  if (!isUuid(postId)) throw new AppError('LL_POST_404');
+  const [post] = await db.select({ id: posts.id, authorId: posts.authorId }).from(posts).where(eq(posts.id, postId));
+  if (!post) throw new AppError('LL_POST_404');
   return post;
 }

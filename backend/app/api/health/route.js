@@ -1,4 +1,4 @@
+import { withErrorHandler } from '@/lib/handler';
+
 // Check that the API is running
-export function GET() {
-  return Response.json({ status: 'ok' });
-}
+export const GET = withErrorHandler(async () => Response.json({ status: 'ok' }));

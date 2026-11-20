@@ -1,20 +1,14 @@
 import { and, count, eq } from 'drizzle-orm';
-import { db, likes, notifications, posts } from '@/db';
-import { getUserId, unauthorized } from '@/lib/auth';
+import { db, likes, notifications } from '@/db';
+import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 import { addNotification } from '@/lib/notifications';
-import { isUuid } from '@/lib/ids';
+import { requirePostId } from '@/lib/posts';
 
 // Like or unlike a post
-export async function POST(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
-
-  const [post] = isUuid(params.id)
-    ? await db.select({ id: posts.id }).from(posts).where(eq(posts.id, params.id))
-    : [];
-  if (!post) {
-    return Response.json({ error: 'Publication introuvable' }, { status: 404 });
-  }
+export const POST = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
+  const post = await requirePostId(params.id);
 
   const myLike = and(eq(likes.postId, post.id), eq(likes.userId, userId));
   const removed = await db.delete(likes).where(myLike).returning();
@@ -39,4 +33,4 @@ export async function POST(request, { params }) {
   const [{ value }] = await db.select({ value: count() }).from(likes).where(eq(likes.postId, post.id));
 
   return Response.json({ liked, likesCount: value });
-}
+});

@@ -21,7 +21,8 @@ describe('friends', () => {
     const twice = await send(
       request('/api/friends/requests', { method: 'POST', token: alice.token, body: { toId: bob.user.id } })
     );
-    expect(twice.status).toBe(400);
+    expect(twice.status).toBe(409);
+    expect((await twice.json()).code).toBe('LL_FRIEND_REQUEST_409');
 
     const pending = (await (await received(request('/api/friends/requests', { token: bob.token }))).json()).requests;
     expect(pending[0].from.id).toBe(alice.user.id);
@@ -39,11 +40,17 @@ describe('friends', () => {
     expect(page.friendStatus).toBe('friends');
   });
 
-  it('returns 404 for an unknown user', async () => {
+  it('returns 422 for an invalid id and 404 for an unknown user', async () => {
     const alice = await createUser();
-    const res = await send(
-      request('/api/friends/requests', { method: 'POST', token: alice.token, body: { toId: 'nope' } })
-    );
-    expect(res.status).toBe(404);
+    const send2 = (toId) =>
+      send(request('/api/friends/requests', { method: 'POST', token: alice.token, body: { toId } }));
+
+    const invalid = await send2('nope');
+    const unknown = await send2('00000000-0000-4000-8000-000000000000');
+
+    expect(invalid.status).toBe(422);
+    expect((await invalid.json()).errors[0]).toMatchObject({ field: 'toId', code: 'INVALID_ID' });
+    expect(unknown.status).toBe(404);
+    expect((await unknown.json()).code).toBe('LL_USER_404');
   });
 });

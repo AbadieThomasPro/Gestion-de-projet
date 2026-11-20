@@ -1,11 +1,11 @@
 import { and, ilike, ne, sql } from 'drizzle-orm';
 import { db, users } from '@/db';
-import { getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
+import { publicUserColumns, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 
 // Search users by name
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const search = (new URL(request.url).searchParams.get('search') || '').trim();
   if (!search) return Response.json({ users: [] });
@@ -19,4 +19,4 @@ export async function GET(request) {
     .where(and(ne(users.id, userId), ilike(sql`${users.firstName} || ' ' || ${users.lastName}`, pattern)));
 
   return Response.json({ users: list });
-}
+});

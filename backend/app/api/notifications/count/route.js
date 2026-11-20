@@ -1,11 +1,11 @@
 import { and, count, eq } from 'drizzle-orm';
 import { db, friendRequests, notifications } from '@/db';
-import { getUserId, unauthorized } from '@/lib/auth';
+import { requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 
 // Numbers shown in red in the navbar
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const [[unread], [pending]] = await Promise.all([
     db
@@ -19,4 +19,4 @@ export async function GET(request) {
   ]);
 
   return Response.json({ notifications: unread.value, friendRequests: pending.value });
-}
+});
