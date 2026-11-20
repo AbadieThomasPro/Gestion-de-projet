@@ -1,6 +1,6 @@
 # Erreurs de l'API
 
-Toutes les erreurs de l'API ont le même format, décidé dans l'EPIC *Error management* (Notion) : [RFC 7807](https://www.rfc-editor.org/rfc/rfc7807) (`Content-Type: application/problem+json`) enrichie d'un code métier stable.
+Toutes les erreurs de l'API ont le même format, décidé dans l'EPIC *Error management* : [RFC 7807](https://www.rfc-editor.org/rfc/rfc7807) (`Content-Type: application/problem+json`) enrichie d'un code métier stable.
 
 ```json
 {

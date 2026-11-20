@@ -1,7 +1,7 @@
 # 📋 Backlog LocalLoop par sprint
 
 Ce dossier rassemble le backlog du projet, rangé **par sprint** et **dans l'ordre où les tâches doivent être faites**.
-Les identifiants `LL-<id>` sont ceux des tickets Notion. Le contenu détaillé de chaque ticket (critères d'acceptation, maquettes) reste dans Notion.
+> **Source de vérité : le [GitHub Project](https://github.com/users/Miisterone/projects/5).** Ce dossier est l'état du backlog au 20/11/2026, importé dans le Project par `node scripts/migrate-backlog.mjs --apply` (une issue par EPIC, US et tâche). Les anciens identifiants `LL-<id>` restent ici pour l'historique ; la correspondance avec les issues est dans `mapping.json` après l'import.
 
 | Sprint | Dates | Objectif | Charge | Fichier |
 |---|---|---|---:|---|
@@ -15,7 +15,7 @@ La charge additionne les estimations des tâches (78 tâches, 61,75 J/H). Les EP
 
 ## Statuts
 
-Les statuts sont ceux **vérifiés dans le code** de `develop` au 20/11/2026, pas ceux déclarés dans Notion.
+Les statuts sont ceux **vérifiés dans le code** de `develop` au 20/11/2026.
 
 | Statut | Signification |
 |---|---|
@@ -56,7 +56,7 @@ Chaque sprint ajoute les tables et colonnes dont il a besoin, par migration :
 
 Aucune donnée d'adresse n'est stockée (RGPD).
 
-## Corrections apportées au backlog Notion
+## Corrections apportées au backlog
 
 Revue du 20/11/2026 :
 

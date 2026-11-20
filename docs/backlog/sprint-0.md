@@ -10,7 +10,7 @@
 
 | # | ID | Tâche | US / EPIC | Responsable | J/H | Dépend de | Statut |
 |---:|---|---|---|---|---:|---|---|
-| 1 | LL-236 | Renommer le projet en LocalLoop (README, UI, identifiants `LL-`, script Notion) | LL-199 | Chef de projet | 0,25 | — | ⬜ |
+| 1 | LL-236 | Renommer le projet en LocalLoop (README, UI, identifiants `LL-`) | LL-199 | Chef de projet | 0,25 | — | ⬜ |
 | 2 | LL-235 | Retirer le module Amis et reporter les notifications en V2 | LL-199 | Dev Web, Dev Backend | 0,5 | — | ⬜ |
 | 3 | LL-128 | Initialiser le projet Next.js (API) | LL-199 | Dev Backend | 1 | — | ✅ |
 | 4 | LL-131 | Mettre en place le routing (React Router) | LL-199 | Dev Web | 0,5 | — | ✅ |
@@ -55,5 +55,5 @@
 - **LL-129** : `.github/workflows/ci.yml` ne vérifie aujourd'hui que `docs/API.md`, avec l'annulation du run précédent. Il manque lint, build, tests et cache npm.
 - **LL-203** : `docs/API.md` est un tableau Markdown généré, pas une spec OpenAPI.
 - **LL-207** : le service `db` sera ajouté par LL-125.
-- **LL-236** : le script `.github/scripts/notion-status.mjs` cherche encore `FB-` dans les noms de branches.
+- **LL-236** : Notion est abandonné au profit de GitHub Projects ; les branches utilisent le numéro d'issue (`feature/<n>-<desc>`).
 - **LL-189** : la police de base fait 15 px, l'EPIC 800×600 demande 16 px minimum.

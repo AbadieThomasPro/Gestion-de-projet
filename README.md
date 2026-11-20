@@ -35,7 +35,7 @@ Projet de groupe : concevoir un réseau social simplifié reprenant les usages c
 
 La gestion de projet se fait sur **[GitHub Projects](https://github.com/users/Miisterone/projects/5)** : chaque ticket est une **issue** du dépôt. Une EPIC est une issue (label `epic`) dont les tâches front et back sont des **sous-issues**. Le numéro de l'issue **`#<n>`** est repris dans le nom des branches et des Pull Requests.
 
-Colonnes du board (champ **Status**) : **À faire → En cours → En review → À tester → Terminé**.
+Colonnes du board (champ **Status**) : **Backlog → À faire → En cours → En review → À tester → Terminé**.
 
 ## ✨ Fonctionnalités
 
@@ -205,7 +205,9 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 
 **Documentation automatique :** `npm run docs` lit les routes de `backend/app/api` et génère [docs/API.md](docs/API.md). La CI échoue si la doc n'a pas été régénérée après un changement d'API. Les notes de version sont générées à chaque release.
 
-**Configuration GitHub Project** (une seule fois) : créer un token *classic* avec les scopes `repo` et `project`, l'ajouter dans *Settings → Secrets and variables → Actions* sous le nom `PROJECT_TOKEN`. Dans le Project, le champ **Status** doit contenir les options `À faire`, `En cours`, `En review`, `À tester`, `Terminé` ; activer aussi le workflow intégré *Item closed → Terminé*. Le nom du champ est modifiable en haut de [project-status.mjs](.github/scripts/project-status.mjs).
+**Configuration GitHub Project** (une seule fois) : créer un token *classic* avec les scopes `repo` et `project`, l'ajouter dans *Settings → Secrets and variables → Actions* sous le nom `PROJECT_TOKEN`. Dans le Project, le champ **Status** doit contenir les options `Backlog`, `À faire`, `En cours`, `En review`, `À tester`, `Terminé` ; activer aussi le workflow intégré *Item closed → Terminé*. Le nom du champ est modifiable en haut de [project-status.mjs](.github/scripts/project-status.mjs).
+
+**Import du backlog** (une seule fois) : `gh auth refresh -s project` puis `GITHUB_TOKEN=$(gh auth token) node scripts/migrate-backlog.mjs --apply`. Le script crée les issues depuis [docs/backlog](docs/backlog/), les sous-issues, les dépendances, et remplit les champs `Status`, `Sprint`, `Rôle` et `Estimation` du Project. Sans `--apply`, il affiche seulement ce qu'il ferait.
 
 ## 📚 Documentation
 
