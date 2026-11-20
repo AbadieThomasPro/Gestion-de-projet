@@ -28,6 +28,8 @@ erDiagram
     posts ||--o{ comments : contient
     users ||--o{ likes : aime
     posts ||--o{ likes : recoit
+    users ||--o{ events : organise
+    zones ||--o{ events : accueille
 ```
 
 ## Dictionnaire des données
@@ -86,6 +88,21 @@ Aucune adresse n'est stockée (RGPD, persona Chloé) : seul le quartier est conn
 | created_at | timestamptz | non nul | Date |
 
 La clé primaire composée garantit un seul like par utilisateur et par publication.
+
+### events
+
+| Colonne | Type | Contraintes | Description |
+|---|---|---|---|
+| id | uuid | PK | Identifiant |
+| author_id | uuid | FK users, cascade | Organisateur |
+| zone_id | integer | FK zones, restrict | Quartier de l'événement : celui de l'auteur à la création, jamais choisi par le client |
+| title | text | non nul | Titre (100 caractères max., contrôlé par l'API) |
+| description | text | non nul | Description (1000 caractères max.) |
+| place | text | non nul | Lieu de rendez-vous en texte libre (« Place du Salin »), jamais une adresse personnelle |
+| starts_at | timestamptz | non nul | Date et heure de début, dans le futur à la création |
+| created_at | timestamptz | non nul, défaut `now()` | Date de création |
+
+Index sur (zone_id, starts_at) : la liste d'un quartier ne montre que les événements à venir, du plus proche au plus lointain.
 
 > Le module Amis a été retiré (LL-235) et les notifications sont reportées en V2 : les tables `friend_requests` et `notifications` sont supprimées par la migration `remove_friends_notifications`.
 

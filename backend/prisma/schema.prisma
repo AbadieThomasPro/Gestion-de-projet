@@ -11,10 +11,11 @@ datasource db {
 
 // Neighbourhoods a user can follow. The pilot zones are inserted by a migration.
 model Zone {
-  id    Int    @id @default(autoincrement())
-  name  String
-  city  String
-  users User[]
+  id     Int    @id @default(autoincrement())
+  name   String
+  city   String
+  users  User[]
+  events Event[]
 
   @@unique([name, city])
   @@map("zones")
@@ -36,6 +37,7 @@ model User {
   posts    Post[]
   comments Comment[]
   likes    Like[]
+  events   Event[]
 
   @@map("users")
 }
@@ -80,4 +82,24 @@ model Like {
 
   @@id([postId, userId])
   @@map("likes")
+}
+
+// Event of a neighbourhood, seen by the users of the same zone
+model Event {
+  id          String   @id @default(uuid()) @db.Uuid
+  authorId    String   @map("author_id") @db.Uuid
+  // Zone of the author when the event was created
+  zoneId      Int      @map("zone_id")
+  title       String
+  description String
+  // Meeting point in free text ("Place du Salin"), never a home address (GDPR)
+  place       String
+  startsAt    DateTime @map("starts_at") @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  zone   Zone @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+
+  @@index([zoneId, startsAt])
+  @@map("events")
 }
