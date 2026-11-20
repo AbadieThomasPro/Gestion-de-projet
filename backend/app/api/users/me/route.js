@@ -1,21 +1,21 @@
-import { eq } from 'drizzle-orm';
-import { db, users } from '@/db';
-import { findPublicUser, publicUserColumns, requireUser } from '@/lib/auth';
+import { publicUserSelect, requireUser } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { withErrorHandler } from '@/lib/handler';
+import { isNotFound, prisma } from '@/lib/prisma';
 import { profileSchema } from '@/lib/schemas';
 import { parseBody } from '@/lib/validation';
 
 // Edit my profile
 export const PUT = withErrorHandler(async (request) => {
   const userId = requireUser(request);
-  const changes = await parseBody(request, profileSchema);
+  const data = await parseBody(request, profileSchema);
 
-  const [user] =
-    Object.keys(changes).length > 0
-      ? await db.update(users).set(changes).where(eq(users.id, userId)).returning(publicUserColumns)
-      : [await findPublicUser(userId)];
-  if (!user) throw new AppError('LL_AUTH_401');
-
-  return Response.json({ user });
+  try {
+    const user = await prisma.user.update({ where: { id: userId }, data, select: publicUserSelect });
+    return Response.json({ user });
+  } catch (error) {
+    // Account deleted since the token was created
+    if (isNotFound(error)) throw new AppError('LL_AUTH_401');
+    throw error;
+  }
 });
