@@ -3,10 +3,21 @@ import { AppError } from './errors';
 import { isUuid } from './ids';
 import { prisma } from './prisma';
 
-const SECRET = process.env.JWT_SECRET || 'dev-secret';
+// Values that must never sign tokens outside a developer machine
+const WEAK_SECRETS = ['', 'change-me', 'dev-secret'];
+
+// Secret read at first use: the build runs without it. In production a missing or
+// default secret stops the server instead of signing tokens anyone can forge.
+export function getSecret(env = process.env) {
+  const secret = env.JWT_SECRET || '';
+  if (env.NODE_ENV === 'production' && (WEAK_SECRETS.includes(secret) || secret.length < 32)) {
+    throw new Error('JWT_SECRET must be set to a random value of at least 32 characters in production');
+  }
+  return secret || 'dev-secret';
+}
 
 export function createToken(user) {
-  return jwt.sign({ id: user.id }, SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id: user.id }, getSecret(), { expiresIn: '7d' });
 }
 
 // Returns the id of the logged user, or null
@@ -14,12 +25,16 @@ export function getUserId(request) {
   const header = request.headers.get('authorization');
   if (!header || !header.startsWith('Bearer ')) return null;
 
+  let payload;
   try {
-    const payload = jwt.verify(header.slice(7), SECRET);
-    return payload.id;
-  } catch {
-    return null;
+    payload = jwt.verify(header.slice(7), getSecret(), { algorithms: ['HS256'] });
+  } catch (error) {
+    // A configuration error must stay a 500, only a bad token is a 401
+    if (error instanceof jwt.JsonWebTokenError) return null;
+    throw error;
   }
+  // Ids are UUIDs: anything else would make the database queries fail
+  return isUuid(payload?.id) ? payload.id : null;
 }
 
 // Id of the logged user, LL_AUTH_401 if the token is missing or invalid
