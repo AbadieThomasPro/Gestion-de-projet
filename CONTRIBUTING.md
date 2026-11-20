@@ -181,3 +181,7 @@ La doc Swagger (`/api/docs`) est générée par [`backend/lib/openapi.js`](backe
 1. Écrire le schéma Zod du corps dans `backend/lib/schemas.js` (il sert à la fois à valider et à documenter).
 2. Ajouter un appel `route({ method, path, tags, summary, request, responses, codes })` dans `backend/lib/openapi.js`, avec dans `codes` les erreurs possibles du [catalogue](ERRORS.md).
 3. Lancer `npm test` : un test échoue si une route de `backend/app/api` n'est pas documentée.
+
+## 🎨 Storybook et rendu 800×600
+
+Chaque composant de `frontend/src/components` a un fichier `*.stories.jsx` à côté de lui. Storybook (`npm run storybook -w frontend`) s'ouvre sur le viewport **Gérard 800×600** : c'est l'écran de référence du persona Gérard, tout doit y être lisible sans défilement horizontal. Les données de démonstration communes sont dans `frontend/src/stories/fixtures.js`.
