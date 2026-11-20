@@ -63,63 +63,93 @@ release/1.0.0
 
 ---
 
-## ✍️ Commits
+## ✍️ Commits & Titres de PR
 
-Nous suivons la convention [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). Les messages sont rédigés **en anglais**.
+Nous suivons rigoureusement la convention [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). Les messages sont rédigés **en anglais**.
+
+> ⚠️ **Contrôle automatique strict en CI :**
+> Le workflow GitHub Actions **`PR check`** vérifie automatiquement le nom de votre branche et le titre de votre Pull Request (qui devient le message de commit lors du *squash and merge*).
+> 
+> La regex vérifiée par la CI est :
+> ```regex
+> ^(feat|fix|refactor|docs|test|ci|chore)(\((frontend|backend|database|infra)\))?: .+
+> ```
+> **Tout écart de syntaxe ou scope non reconnu fait échouer la CI.**
 
 ```text
-type(scope): description
+type(scope): description [LL-<id>]
 ```
 
-### Types
+### Types autorisés (liste fermée)
 
 | Type | Usage |
 |---|---|
 | `feat` | Ajout d'une fonctionnalité |
 | `fix` | Correction d'un bug |
-| `refactor` | Modification du code sans changement fonctionnel |
+| `refactor` | Modification du code sans changement fonctionnel ni correctif |
 | `docs` | Modification de la documentation |
-| `test` | Ajout ou modification de tests |
-| `ci` | Modification des pipelines CI/CD |
-| `chore` | Maintenance diverse (dépendances, configuration…) |
+| `test` | Ajout ou modification de tests (unitaires, intégration, E2E) |
+| `ci` | Modification des pipelines CI/CD et workflows GitHub Actions |
+| `chore` | Maintenance diverse (dépendances, configuration, scripts…) |
 
-### Scopes
+*(Les types comme `style`, `perf`, `build`, `wip`, `misc` ne sont **pas** autorisés par la CI).*
 
-| Scope | Partie concernée |
-|---|---|
-| `frontend` | Application React |
-| `backend` | API Next.js |
-| `database` | Schéma, migrations, données |
-| `infra` | Docker, déploiement, configuration |
+### Scopes autorisés (liste strictement fermée)
 
-Le scope est facultatif quand le changement est global (ex. `ci: add lint and test checks`).
+Seuls ces **4 scopes** (en minuscules) sont acceptés par la CI :
 
-### Exemples
+| Scope | Partie concernée | Exemples |
+|---|---|---|
+| `frontend` | Application React, composants, stories, tests E2E | `feat(frontend): add login form` |
+| `backend` | API Next.js, routes, middlewares, contrôleurs | `fix(backend): validate jwt secret` |
+| `database` | Schéma Prisma, migrations SQL, seed | `feat(database): add events table` |
+| `infra` | Docker, compose, déploiement | `fix(infra): update node alpine image` |
 
-```text
-feat(frontend): create login page
-fix(backend): handle expired authentication tokens
-docs(infra): document docker setup
-test(backend): add unit tests for post creation
-ci: add lint and test checks
-```
+> 💡 **Le scope est facultatif :** si votre modification concerne l'ensemble du projet ou ne rentre pas dans ces 4 scopes, **ne mettez pas de scope** (ex. `ci: update workflow`, `test: audit 800x600 views`).
+>
+> 🚫 **Attention aux pièges fréquents de scopes :**
+> - Les tests E2E / Playwright doivent utiliser le scope `frontend` ou **aucun scope** (`test(frontend): ...` ou `test: ...`). **Le scope `(e2e)` fait échouer la CI.**
+> - L'API doit utiliser `backend` (`(api)` fait échouer la CI).
+> - N'inventez aucun autre scope (`ui`, `auth`, `router`, `lib`… sont interdits).
 
-### Bonnes pratiques
+### Règles de syntaxe impératives
 
-- Un commit = **une modification cohérente**.
-- Description à l'**impératif**, sans majuscule ni point final : `add`, `fix`, `remove`.
-- Un changement cassant est signalé par `!` : `feat(backend)!: rename posts endpoint`.
+1. **Type et scope en minuscules :** `feat`, pas `Feat`.
+2. **Deux-points et espace obligatoire :** `type(scope): description` (espace obligatoire après le `:`).
+3. **Description en anglais à l'impératif présent :** `add`, `fix`, `remove`, `update` (pas de français, pas de passé `fixed`, pas de gérondif `adding`).
+4. **Pas de majuscule au premier mot ni de point final :** `add login page` (et non `Add login page.`).
+5. **Identifiant de ticket `[LL-xxx]` :**
+   - ✅ **À la fin** : `test(frontend): audit every page in 800x600 [LL-189]`
+   - ❌ **JAMAIS au début** : `[LL-189] test(frontend): ...` (fait échouer la regex CI car elle attend le `type` au début).
+
+### ❌ Rejeté par la CI vs ✅ Accepté par la CI
+
+| Ce qui fait échouer la CI ❌ | Ce qui est accepté ✅ | Pourquoi c'est rejeté ? |
+|---|---|---|
+| `test(e2e): audit pages` | `test(frontend): audit pages` ou `test: audit pages` | `e2e` n'est pas un scope valide (seuls `frontend`, `backend`, `database`, `infra` le sont). |
+| `[LL-189] fix(frontend): fix padding` | `fix(frontend): fix padding [LL-189]` | Le message doit obligatoirement commencer par le type (`feat`, `fix`…). |
+| `feat(api): add events route` | `feat(backend): add events route` | `api` n'est pas un scope valide, utiliser `backend`. |
+| `feat(frontend):add button` | `feat(frontend): add button` | Espace manquant après `:`. |
+| `Feat(frontend): add button` | `feat(frontend): add button` | Le type doit être en minuscules. |
+| `fix(frontend): corriger affichage` | `fix(frontend): fix layout display` | La description doit être rédigée en anglais. |
+| `wip: test in progress` | `test(frontend): add draft tests` | `wip` n'est pas un type valide. |
 
 ---
 
 ## 🔀 Pull Requests
 
-### Titre
+### Titre de la PR
 
-Même format qu'un commit. La description de la PR contient **`Closes #<n>`** (numéro de l'issue) pour lier l'issue :
+Le titre de la Pull Request est soumis **exactement aux mêmes règles Conventional Commits que ci-dessus**, car c'est lui qui sera utilisé comme nom du commit final sur `develop` / `main` lors du *squash and merge*.
 
 ```text
-feat(frontend): add profile page
+feat(frontend): add profile page [LL-142]
+```
+
+La description de la PR contient **`Closes #<n>`** (numéro de l'issue) pour lier et fermer l'issue automatiquement à la fusion :
+
+```markdown
+Closes #88
 ```
 
 ### Avant d'ouvrir la PR
