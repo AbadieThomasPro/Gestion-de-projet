@@ -1,6 +1,5 @@
-import { and, eq } from 'drizzle-orm';
-import { db, friendRequests, users } from '@/db';
-import { findPublicUser, getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { findPublicUser, getUserId, publicUserSelect, unauthorized } from '@/lib/auth';
 import { getFriendStatus } from '@/lib/friends';
 import { isUuid } from '@/lib/ids';
 
@@ -9,18 +8,11 @@ export async function GET(request) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const requests = await db
-    .select({
-      id: friendRequests.id,
-      fromId: friendRequests.fromId,
-      toId: friendRequests.toId,
-      status: friendRequests.status,
-      createdAt: friendRequests.createdAt,
-      from: publicUserColumns,
-    })
-    .from(friendRequests)
-    .innerJoin(users, eq(users.id, friendRequests.fromId))
-    .where(and(eq(friendRequests.toId, userId), eq(friendRequests.status, 'pending')));
+  const requests = await prisma.friendRequest.findMany({
+    where: { toId: userId, status: 'pending' },
+    include: { from: { select: publicUserSelect } },
+    orderBy: { createdAt: 'desc' },
+  });
 
   return Response.json({ requests });
 }
@@ -39,7 +31,7 @@ export async function POST(request) {
     return Response.json({ error: 'Demande impossible' }, { status: 400 });
   }
 
-  const [friendRequest] = await db.insert(friendRequests).values({ fromId: userId, toId }).returning();
+  const friendRequest = await prisma.friendRequest.create({ data: { fromId: userId, toId } });
 
   return Response.json({ request: friendRequest }, { status: 201 });
 }

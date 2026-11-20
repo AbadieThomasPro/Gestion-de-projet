@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
-import { db, users } from '@/db';
-import { createToken, publicUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { createToken, publicUserSelect } from '@/lib/auth';
 
 // Create an account
 export async function POST(request) {
@@ -15,20 +14,19 @@ export async function POST(request) {
   }
 
   const emailLower = email.trim().toLowerCase();
-  const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, emailLower));
-  if (existing) {
+  if (await prisma.user.findUnique({ where: { email: emailLower }, select: { id: true } })) {
     return Response.json({ error: 'Cet email est déjà utilisé' }, { status: 409 });
   }
 
-  const [user] = await db
-    .insert(users)
-    .values({
+  const user = await prisma.user.create({
+    data: {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: emailLower,
       password: await bcrypt.hash(password, 10),
-    })
-    .returning();
+    },
+    select: publicUserSelect,
+  });
 
-  return Response.json({ token: createToken(user), user: publicUser(user) }, { status: 201 });
+  return Response.json({ token: createToken(user), user }, { status: 201 });
 }

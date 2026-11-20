@@ -1,15 +1,10 @@
-import { and, eq } from 'drizzle-orm';
-import { db, friendRequests } from '@/db';
+import { prisma } from '@/lib/prisma';
 import { getUserId, unauthorized } from '@/lib/auth';
 import { isUuid } from '@/lib/ids';
 
 // Pending request received by the user
 function pendingRequest(id, userId) {
-  return and(
-    eq(friendRequests.id, id),
-    eq(friendRequests.toId, userId),
-    eq(friendRequests.status, 'pending')
-  );
+  return { id, toId: userId, status: 'pending' };
 }
 
 function notFound() {
@@ -22,14 +17,13 @@ export async function PUT(request, { params }) {
   if (!userId) return unauthorized();
   if (!isUuid(params.id)) return notFound();
 
-  const [friendRequest] = await db
-    .update(friendRequests)
-    .set({ status: 'accepted' })
-    .where(pendingRequest(params.id, userId))
-    .returning();
-  if (!friendRequest) return notFound();
+  const { count } = await prisma.friendRequest.updateMany({
+    where: pendingRequest(params.id, userId),
+    data: { status: 'accepted' },
+  });
+  if (count === 0) return notFound();
 
-  return Response.json({ request: friendRequest });
+  return Response.json({ request: await prisma.friendRequest.findUnique({ where: { id: params.id } }) });
 }
 
 // Refuse a request
@@ -38,8 +32,8 @@ export async function DELETE(request, { params }) {
   if (!userId) return unauthorized();
   if (!isUuid(params.id)) return notFound();
 
-  const deleted = await db.delete(friendRequests).where(pendingRequest(params.id, userId)).returning();
-  if (deleted.length === 0) return notFound();
+  const { count } = await prisma.friendRequest.deleteMany({ where: pendingRequest(params.id, userId) });
+  if (count === 0) return notFound();
 
   return Response.json({ message: 'Demande refusée' });
 }

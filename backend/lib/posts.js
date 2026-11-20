@@ -1,40 +1,36 @@
-import { desc, eq, sql } from 'drizzle-orm';
-import { db, posts, users } from '@/db';
-import { publicUserColumns } from './auth';
+import { publicUserSelect } from './auth';
+import { prisma } from './prisma';
 
-// Drizzle writes posts.id as a bare "id" in subqueries, which would point to comments.id
-const POST_ID = sql.raw('"posts"."id"');
-
-// Columns of a post sent to the client: author, likes and comments count
-function postColumns(userId) {
+// Fields of a post sent to the client: author, likes and comments count, liked by the reader
+function postSelect(userId) {
   return {
-    id: posts.id,
-    authorId: posts.authorId,
-    content: posts.content,
-    createdAt: posts.createdAt,
-    author: publicUserColumns,
-    likesCount: sql`(select count(*) from likes where likes.post_id = ${POST_ID})`.mapWith(Number),
-    likedByMe: sql`exists(select 1 from likes where likes.post_id = ${POST_ID} and likes.user_id = ${userId})`.mapWith(
-      Boolean
-    ),
-    commentsCount: sql`(select count(*) from comments where comments.post_id = ${POST_ID})`.mapWith(Number),
+    id: true,
+    authorId: true,
+    content: true,
+    createdAt: true,
+    author: { select: publicUserSelect },
+    _count: { select: { likes: true, comments: true } },
+    likes: { where: { userId }, select: { userId: true } },
   };
 }
 
+function formatPost({ _count, likes, ...post }) {
+  return { ...post, likesCount: _count.likes, likedByMe: likes.length > 0, commentsCount: _count.comments };
+}
+
 // Posts from the most recent, with optional filter and pagination
-export function listPosts({ userId, where, limit, offset = 0 }) {
-  let query = db
-    .select(postColumns(userId))
-    .from(posts)
-    .innerJoin(users, eq(users.id, posts.authorId))
-    .where(where)
-    .orderBy(desc(posts.createdAt), desc(posts.id))
-    .offset(offset);
-  if (limit) query = query.limit(limit);
-  return query;
+export async function listPosts({ userId, where, take, skip = 0 }) {
+  const posts = await prisma.post.findMany({
+    where,
+    select: postSelect(userId),
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take,
+    skip,
+  });
+  return posts.map(formatPost);
 }
 
 export async function getPost(postId, userId) {
-  const [post] = await listPosts({ userId, where: eq(posts.id, postId), limit: 1 });
-  return post;
+  const post = await prisma.post.findUnique({ where: { id: postId }, select: postSelect(userId) });
+  return post && formatPost(post);
 }

@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // pg is a Node.js dependency, it must not be bundled by webpack
-  experimental: { serverComponentsExternalPackages: ['pg'] },
+  // Node.js dependencies (Prisma and its PostgreSQL driver) must not be bundled by webpack
+  experimental: { serverComponentsExternalPackages: ['@prisma/client', '@prisma/adapter-pg', 'pg'] },
 };
 
 export default nextConfig;
