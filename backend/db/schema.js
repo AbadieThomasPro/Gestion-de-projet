@@ -3,9 +3,11 @@
 import {
   boolean,
   index,
+  integer,
   pgEnum,
   pgTable,
   primaryKey,
+  serial,
   text,
   timestamp,
   unique,
@@ -15,6 +17,17 @@ import {
 const id = () => uuid('id').primaryKey().defaultRandom();
 const createdAt = () => timestamp('created_at', { withTimezone: true }).notNull().defaultNow();
 
+// Neighbourhoods a user can follow. The pilot zones are inserted by a migration.
+export const zones = pgTable(
+  'zones',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    city: text('city').notNull(),
+  },
+  (t) => [unique('zones_name_city_unique').on(t.name, t.city)]
+);
+
 export const users = pgTable('users', {
   id: id(),
   firstName: text('first_name').notNull(),
@@ -23,6 +36,8 @@ export const users = pgTable('users', {
   password: text('password').notNull(),
   bio: text('bio').notNull().default(''),
   avatar: text('avatar').notNull().default(''),
+  // Neighbourhood chosen at registration, never an address (GDPR). Null for the accounts created before.
+  zoneId: integer('zone_id').references(() => zones.id, { onDelete: 'restrict' }),
   createdAt: createdAt(),
 });
 

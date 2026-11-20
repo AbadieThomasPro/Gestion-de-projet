@@ -4,7 +4,7 @@ import { POST as login } from '@/app/api/auth/login/route';
 import { GET as feed } from '@/app/api/posts/route';
 import { DELETE as remove } from '@/app/api/posts/[id]/route';
 import { GET as health } from '@/app/api/health/route';
-import { createUser, request, resetDb } from '../helpers';
+import { createUser, firstZoneId, request, resetDb } from '../helpers';
 
 beforeEach(resetDb);
 
@@ -46,6 +46,7 @@ describe('error contract', () => {
       ['lastName', 'REQUIRED'],
       ['email', 'INVALID_EMAIL'],
       ['password', 'TOO_SHORT'],
+      ['zoneId', 'REQUIRED'],
     ]);
   });
 
@@ -65,7 +66,7 @@ describe('error contract', () => {
     const duplicate = await register(
       request('/api/auth/register', {
         method: 'POST',
-        body: { firstName: 'A', lastName: 'B', email: user.email, password: 'secret1' },
+        body: { firstName: 'A', lastName: 'B', email: user.email, password: 'secret1', zoneId: await firstZoneId() },
       })
     );
     const badLogin = await login(

@@ -34,6 +34,10 @@ export const registerSchema = z.object({
     .min(6, 'Le mot de passe doit faire au moins 6 caractères.')
     // bcrypt only uses the first 72 bytes
     .max(72, 'Le mot de passe ne doit pas dépasser 72 caractères.'),
+  zoneId: z
+    .number({ required_error: 'Choisissez votre quartier.', invalid_type_error: 'Choisissez votre quartier.' })
+    .int('Choisissez votre quartier.')
+    .positive('Choisissez votre quartier.'),
 });
 
 export const loginSchema = z.object({

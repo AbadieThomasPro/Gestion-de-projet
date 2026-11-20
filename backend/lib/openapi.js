@@ -37,8 +37,15 @@ const User = registry.register(
     email: z.string().email(),
     bio: z.string(),
     avatar: z.string(),
+    zoneId: z.number().int().nullable().openapi({ description: 'Quartier choisi (null pour les anciens comptes)' }),
+    zoneName: z.string().nullable().openapi({ example: 'Saint-Michel' }),
     createdAt: date,
   })
+);
+
+const Zone = registry.register(
+  'Zone',
+  z.object({ id: z.number().int(), name: z.string(), city: z.string() }).openapi({ example: { id: 1, name: 'Saint-Michel', city: 'Toulouse' } })
 );
 
 const Post = registry.register(
@@ -183,7 +190,16 @@ route({
   auth: false,
   request: body(registerSchema),
   responses: { 201: ok(Auth, 'Compte créé') },
-  codes: ['LL_VALIDATION_422', 'LL_EMAIL_409'],
+  codes: ['LL_VALIDATION_422', 'LL_ZONE_404', 'LL_EMAIL_409'],
+});
+
+route({
+  method: 'get',
+  path: '/api/zones',
+  tags: ['Quartiers'],
+  summary: "Quartiers que l'on peut choisir à l'inscription",
+  auth: false,
+  responses: { 200: ok(z.object({ zones: z.array(Zone) })) },
 });
 
 route({
