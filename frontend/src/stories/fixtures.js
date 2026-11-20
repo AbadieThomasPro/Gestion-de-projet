@@ -24,6 +24,19 @@ export const post = {
   commentsCount: 1,
 };
 
+export const event = {
+  id: '00000000-0000-4000-8000-0000000000ee',
+  authorId: gerard.id,
+  author: gerard,
+  zoneId: 1,
+  zone: { id: 1, name: 'Saint-Michel', city: 'Toulouse' },
+  title: 'Fête des voisins',
+  description: 'Chacun apporte un plat, l’association prête les tables.',
+  place: 'Place du Salin',
+  startsAt: '2030-06-21T17:30:00.000Z',
+  createdAt: '2026-11-20T08:30:00.000Z',
+};
+
 export const zones = [
   { id: 1, name: 'Saint-Michel', city: 'Toulouse' },
   { id: 2, name: 'Saint-Cyprien', city: 'Toulouse' },

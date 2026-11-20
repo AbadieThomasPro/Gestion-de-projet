@@ -49,6 +49,21 @@ export const postSchema = z.object({ content: text('La publication', 2000) });
 
 export const commentSchema = z.object({ content: text('Le commentaire', 1000) });
 
+export const eventSchema = z.object({
+  title: text('Le titre', 100),
+  description: text('La description', 1000),
+  // Meeting point in free text, never a home address
+  place: text('Le lieu', 100),
+  startsAt: z
+    .string(required('La date'))
+    .datetime({ offset: true, message: "La date n'est pas valide." })
+    // An unreadable date is already refused by datetime(): only report it once
+    .refine((value) => Number.isNaN(Date.parse(value)) || new Date(value) > new Date(), {
+      message: "La date doit être dans le futur.",
+      params: { code: 'INVALID_VALUE' },
+    }),
+});
+
 export const profileSchema = z.object({
   firstName: name('Le prénom').optional(),
   lastName: name('Le nom').optional(),

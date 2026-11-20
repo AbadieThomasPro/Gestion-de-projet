@@ -23,7 +23,8 @@ for (const file of findRoutes(API_DIR).sort()) {
   const needsAuth = code.includes('requireUser(') ? 'Oui' : 'Non';
 
   // Finds "// comment" (optional) followed by "export const GET = withErrorHandler("
-  const regex = /(?:\/\/ (.*)\n)?export const (GET|POST|PUT|DELETE) = /g;
+  // \r?\n: the route files have CRLF line endings on a Windows checkout
+  const regex = /(?:\/\/ (.*)\r?\n)?export const (GET|POST|PUT|DELETE) = /g;
   for (const match of code.matchAll(regex)) {
     rows.push(`| ${match[2]} | \`${url}\` | ${needsAuth} | ${match[1] || ''} |`);
   }

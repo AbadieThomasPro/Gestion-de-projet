@@ -5,7 +5,7 @@ import { POST as register } from '@/app/api/auth/register/route';
 // Empties every table between two tests
 export async function resetDb() {
   await prisma.$executeRawUnsafe(
-    'truncate table likes, comments, posts, users restart identity cascade'
+    'truncate table events, likes, comments, posts, users restart identity cascade'
   );
 }
 
@@ -29,13 +29,13 @@ export async function firstZoneId() {
   return zone.id;
 }
 
-// Creates an account and returns { token, user }
-export async function createUser(firstName = 'Test') {
+// Creates an account (in the first pilot zone by default) and returns { token, user }
+export async function createUser(firstName = 'Test', zoneId) {
   counter += 1;
   const res = await register(
     request('/api/auth/register', {
       method: 'POST',
-      body: { firstName, lastName: 'User', email: `user${counter}@test.dev`, password: 'secret1', zoneId: await firstZoneId() },
+      body: { firstName, lastName: 'User', email: `user${counter}@test.dev`, password: 'secret1', zoneId: zoneId ?? (await firstZoneId()) },
     })
   );
   return res.json();

@@ -9,6 +9,7 @@ export default function Navbar({ user, onLogout }) {
       </Link>
       <div className="nav-links">
         <Link to="/">Accueil</Link>
+        <Link to="/events">Événements</Link>
         <Link to={`/profile/${user.id}`} className="nav-user">
           <Avatar user={user} size={28} />
           {user.firstName}

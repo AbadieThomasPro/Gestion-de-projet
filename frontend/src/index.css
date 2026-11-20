@@ -210,6 +210,39 @@ button:disabled {
   width: 100%;
 }
 
+/* Events */
+.event-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.event-form .field-label {
+  margin: 6px 0 0;
+}
+
+.event-form button {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+.event-card h3,
+.event-card p {
+  overflow-wrap: anywhere;
+}
+
+.event-when,
+.event-where {
+  margin: 4px 0;
+  font-weight: bold;
+}
+
+.event-author {
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+}
+
 /* Profile */
 .profile-header {
   display: flex;
