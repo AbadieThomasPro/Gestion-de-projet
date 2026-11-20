@@ -51,6 +51,12 @@ test("feed with a long post", async ({ page }) => {
   await expectFits(page, page.getByRole("button", { name: "Publier" }));
 });
 
+test("events page", async ({ page }) => {
+  await register(page);
+  await page.getByRole("link", { name: "Événements" }).click();
+  await expectFits(page, page.getByLabel("Titre"));
+});
+
 test("my profile, in reading and editing mode", async ({ page }) => {
   await register(page, {
     firstName: "Maximilien-Alexandre",
