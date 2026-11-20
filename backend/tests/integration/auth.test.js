@@ -24,7 +24,7 @@ describe('auth', () => {
 
     expect(res.status).toBe(201);
     expect(data.token).toBeTruthy();
-    expect(data.user).toMatchObject({ firstName: 'Chloé', email: 'chloe@test.dev', zoneName: 'Saint-Michel' });
+    expect(data.user).toMatchObject({ firstName: 'Chloé', email: 'chloe@test.dev', zone: { name: 'Saint-Michel' } });
     expect(data.user.password).toBeUndefined();
   });
 

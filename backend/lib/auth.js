@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { eq, sql } from 'drizzle-orm';
-import { db, users } from '@/db';
 import { AppError } from './errors';
 import { isUuid } from './ids';
+import { prisma } from './prisma';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
@@ -30,23 +29,22 @@ export function requireUser(request) {
   return userId;
 }
 
-// Columns of a user that can be sent to the client (never the password)
-export const publicUserColumns = {
-  id: users.id,
-  firstName: users.firstName,
-  lastName: users.lastName,
-  email: users.email,
-  bio: users.bio,
-  avatar: users.avatar,
+// Fields of a user that can be sent to the client (never the password)
+export const publicUserSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  bio: true,
+  avatar: true,
   // Only the neighbourhood is public, never an address
-  zoneId: users.zoneId,
-  zoneName: sql`(select zones.name from zones where zones.id = "users"."zone_id")`,
-  createdAt: users.createdAt,
+  zoneId: true,
+  zone: { select: { id: true, name: true, city: true } },
+  createdAt: true,
 };
 
-export async function findPublicUser(id) {
-  const [user] = await db.select(publicUserColumns).from(users).where(eq(users.id, id));
-  return user;
+export function findPublicUser(id) {
+  return prisma.user.findUnique({ where: { id }, select: publicUserSelect });
 }
 
 // Public profile of an existing user, LL_USER_404 otherwise

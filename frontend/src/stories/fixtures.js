@@ -7,7 +7,7 @@ export const gerard = {
   bio: 'Retraité, jardinier du dimanche.',
   avatar: '',
   zoneId: 1,
-  zoneName: 'Saint-Michel',
+  zone: { id: 1, name: 'Saint-Michel', city: 'Toulouse' },
   createdAt: '2026-11-01T09:00:00.000Z',
 };
 

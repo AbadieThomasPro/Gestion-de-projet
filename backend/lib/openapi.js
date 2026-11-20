@@ -28,6 +28,13 @@ const bearer = registry.registerComponent('securitySchemes', 'bearer', {
 const id = z.string().uuid();
 const date = z.string().datetime();
 
+const Zone = registry.register(
+  'Zone',
+  z
+    .object({ id: z.number().int(), name: z.string(), city: z.string() })
+    .openapi({ example: { id: 1, name: 'Saint-Michel', city: 'Toulouse' } })
+);
+
 const User = registry.register(
   'User',
   z.object({
@@ -38,14 +45,9 @@ const User = registry.register(
     bio: z.string(),
     avatar: z.string(),
     zoneId: z.number().int().nullable().openapi({ description: 'Quartier choisi (null pour les anciens comptes)' }),
-    zoneName: z.string().nullable().openapi({ example: 'Saint-Michel' }),
+    zone: Zone.nullable(),
     createdAt: date,
   })
-);
-
-const Zone = registry.register(
-  'Zone',
-  z.object({ id: z.number().int(), name: z.string(), city: z.string() }).openapi({ example: { id: 1, name: 'Saint-Michel', city: 'Toulouse' } })
 );
 
 const Post = registry.register(

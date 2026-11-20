@@ -1,9 +1,8 @@
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
-import { db, users } from '@/db';
 import { createToken, findPublicUser } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 import { withErrorHandler } from '@/lib/handler';
+import { prisma } from '@/lib/prisma';
 import { loginSchema } from '@/lib/schemas';
 import { parseBody } from '@/lib/validation';
 
@@ -11,7 +10,7 @@ import { parseBody } from '@/lib/validation';
 export const POST = withErrorHandler(async (request) => {
   const { email, password } = await parseBody(request, loginSchema);
 
-  const [user] = await db.select().from(users).where(eq(users.email, email));
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw new AppError('LL_LOGIN_401');

@@ -1,14 +1,13 @@
-import { asc, eq } from 'drizzle-orm';
-import { db, zones } from '@/db';
 import { AppError } from './errors';
+import { prisma } from './prisma';
 
 export function listZones() {
-  return db.select().from(zones).orderBy(asc(zones.city), asc(zones.name));
+  return prisma.zone.findMany({ orderBy: [{ city: 'asc' }, { name: 'asc' }] });
 }
 
 // Existing zone, LL_ZONE_404 otherwise
 export async function requireZone(zoneId) {
-  const [zone] = await db.select().from(zones).where(eq(zones.id, zoneId));
+  const zone = await prisma.zone.findUnique({ where: { id: zoneId } });
   if (!zone) throw new AppError('LL_ZONE_404');
   return zone;
 }

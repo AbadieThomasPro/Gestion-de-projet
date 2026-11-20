@@ -34,7 +34,7 @@ describe('zones', () => {
     const { user } = await res.json();
 
     expect(res.status).toBe(201);
-    expect(user).toMatchObject({ zoneId: carmes.id, zoneName: 'Les Carmes' });
+    expect(user).toMatchObject({ zoneId: carmes.id, zone: carmes });
   });
 
   it('answers 404 LL_ZONE_404 for an unknown zone', async () => {
@@ -62,7 +62,7 @@ describe('zones', () => {
       await profile(request(`/api/users/${other.user.id}`, { token: me.token }), { params: { id: other.user.id } })
     ).json();
 
-    expect(user.zoneName).toBe('Saint-Michel');
+    expect(user.zone).toMatchObject({ name: 'Saint-Michel', city: 'Toulouse' });
     expect(Object.keys(user)).not.toContain('address');
     expect(Object.keys(user)).not.toContain('password');
   });

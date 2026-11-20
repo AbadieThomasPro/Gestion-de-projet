@@ -1,12 +1,11 @@
 // Helpers for the integration tests: they call the route handlers directly, without HTTP server
-import { sql } from 'drizzle-orm';
-import { db, zones } from '@/db';
+import { prisma } from '@/lib/prisma';
 import { POST as register } from '@/app/api/auth/register/route';
 
 // Empties every table between two tests
 export async function resetDb() {
-  await db.execute(
-    sql`truncate table notifications, likes, comments, friend_requests, posts, users restart identity cascade`
+  await prisma.$executeRawUnsafe(
+    'truncate table notifications, likes, comments, friend_requests, posts, users restart identity cascade'
   );
 }
 
@@ -26,7 +25,7 @@ let counter = 0;
 
 // Id of the first pilot zone (inserted by the migrations)
 export async function firstZoneId() {
-  const [zone] = await db.select().from(zones).orderBy(zones.id).limit(1);
+  const zone = await prisma.zone.findFirst({ orderBy: { id: 'asc' } });
   return zone.id;
 }
 
