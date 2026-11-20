@@ -11,7 +11,7 @@ export const DELETE = withErrorHandler(async (request, { params }) => {
 
   if (post.authorId !== userId) throw new AppError('LL_AUTH_403');
 
-  // Likes, comments and notifications of the post are deleted in cascade
+  // Likes and comments of the post are deleted in cascade
   await prisma.post.delete({ where: { id: post.id } });
 
   return Response.json({ message: 'Publication supprimée' });

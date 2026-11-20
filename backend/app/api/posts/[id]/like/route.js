@@ -1,6 +1,5 @@
 import { requireUser } from '@/lib/auth';
 import { withErrorHandler } from '@/lib/handler';
-import { addNotification } from '@/lib/notifications';
 import { requirePost } from '@/lib/posts';
 import { prisma } from '@/lib/prisma';
 
@@ -14,11 +13,6 @@ export const POST = withErrorHandler(async (request, { params }) => {
 
   if (liked) {
     await prisma.like.createMany({ data: { postId: post.id, userId }, skipDuplicates: true });
-    await addNotification({ type: 'like', postId: post.id, fromId: userId });
-  } else {
-    await prisma.notification.deleteMany({
-      where: { type: 'like', postId: post.id, fromId: userId, read: false },
-    });
   }
 
   const likesCount = await prisma.like.count({ where: { postId: post.id } });

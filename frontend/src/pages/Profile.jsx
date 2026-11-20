@@ -9,7 +9,7 @@ export default function Profile({ user, setUser }) {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [friendStatus, setFriendStatus] = useState('none');
+  const [isMe, setIsMe] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [error, setError] = useState('');
@@ -40,7 +40,7 @@ export default function Profile({ user, setUser }) {
       .then((data) => {
         setProfile(data.user);
         setPosts(data.posts);
-        setFriendStatus(data.friendStatus);
+        setIsMe(data.isMe);
       })
       .catch((err) => setError(err.message));
   }, [id]);
@@ -63,11 +63,6 @@ export default function Profile({ user, setUser }) {
     setEditing(false);
   }
 
-  async function addFriend() {
-    await api('/friends/requests', { method: 'POST', body: { toId: profile.id } });
-    setFriendStatus('sent');
-  }
-
   if (error) return <p className="error center">{error}</p>;
   if (!profile) return <p className="center">Chargement...</p>;
 
@@ -81,22 +76,18 @@ export default function Profile({ user, setUser }) {
         {profile.zone && <p className="zone">Quartier : {profile.zone.name}</p>}
         {profile.bio && <p>{profile.bio}</p>}
 
-        {friendStatus === 'me' && !editing && (
+        {isMe && !editing && (
           <button className="btn-light" onClick={startEditing}>
             Modifier le profil
           </button>
         )}
-        {friendStatus === 'none' && <button onClick={addFriend}>Ajouter en ami</button>}
-        {friendStatus === 'sent' && <span className="badge">Demande envoyée</span>}
-        {friendStatus === 'received' && <span className="badge">Vous a envoyé une demande</span>}
-        {friendStatus === 'friends' && <span className="badge">Amis</span>}
       </div>
 
       <StatsCard
         stats={stats}
         isLoading={statsLoading}
         error={statsError}
-        isMe={friendStatus === 'me'}
+        isMe={isMe}
       />
 
       {editing && (

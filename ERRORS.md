@@ -38,8 +38,6 @@ Source : [`backend/lib/errors.js`](backend/lib/errors.js).
 | `LL_AUTH_403` | 403 | Vous n'avez pas accès à ce contenu. | Action interdite (ex. supprimer la publication d'un autre) |
 | `LL_POST_404` | 404 | Cette publication n'existe pas ou n'est plus disponible. | Publication inconnue |
 | `LL_USER_404` | 404 | Cet utilisateur n'existe pas. | Utilisateur inconnu |
-| `LL_FRIEND_REQUEST_404` | 404 | Cette demande d'ami n'existe plus. | Demande inconnue ou déjà traitée |
-| `LL_FRIEND_REQUEST_409` | 409 | Une demande d'ami existe déjà avec cette personne. | Demande en double, déjà amis, ou demande à soi-même |
 | `LL_EMAIL_409` | 409 | Cet email est déjà utilisé. | Inscription avec un email existant |
 | `LL_ZONE_404` | 404 | Cette zone n'existe pas ou n'est pas encore ouverte. | Zone inconnue |
 | `LL_EVENT_404` | 404 | Cet événement n'existe pas ou a été annulé. | Événement inconnu |

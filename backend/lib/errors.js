@@ -7,8 +7,6 @@ export const ERRORS = {
   LL_AUTH_403: { status: 403, title: "Vous n'avez pas accès à ce contenu." },
   LL_POST_404: { status: 404, title: "Cette publication n'existe pas ou n'est plus disponible." },
   LL_USER_404: { status: 404, title: "Cet utilisateur n'existe pas." },
-  LL_FRIEND_REQUEST_404: { status: 404, title: "Cette demande d'ami n'existe plus." },
-  LL_FRIEND_REQUEST_409: { status: 409, title: "Une demande d'ami existe déjà avec cette personne." },
   LL_EMAIL_409: { status: 409, title: 'Cet email est déjà utilisé.' },
   LL_ZONE_404: { status: 404, title: "Cette zone n'existe pas ou n'est pas encore ouverte." },
   LL_EVENT_404: { status: 404, title: "Cet événement n'existe pas ou a été annulé." },

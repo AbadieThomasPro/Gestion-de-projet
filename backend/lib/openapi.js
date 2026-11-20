@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { ERRORS, ERROR_TYPE_BASE } from './errors';
 import {
   commentSchema,
-  friendRequestSchema,
   loginSchema,
   postSchema,
   profileSchema,
@@ -69,26 +68,6 @@ const Comment = registry.register(
   z.object({ id, postId: id, authorId: id, content: z.string(), createdAt: date, author: User })
 );
 
-const FriendRequest = registry.register(
-  'FriendRequest',
-  z.object({ id, fromId: id, toId: id, status: z.enum(['pending', 'accepted']), createdAt: date })
-);
-
-const Notification = registry.register(
-  'Notification',
-  z.object({
-    id,
-    userId: id,
-    fromId: id,
-    type: z.enum(['like', 'comment']),
-    postId: id,
-    read: z.boolean(),
-    createdAt: date,
-    from: User,
-    postContent: z.string(),
-  })
-);
-
 const Stats = registry.register(
   'UserStats',
   z.object({
@@ -127,7 +106,6 @@ registry.register('LoginBody', loginSchema);
 registry.register('PostBody', postSchema);
 registry.register('CommentBody', commentSchema);
 registry.register('ProfileBody', profileSchema);
-registry.register('FriendRequestBody', friendRequestSchema);
 
 // ---------- Helpers ----------
 
@@ -312,7 +290,7 @@ route({
       z.object({
         user: User,
         posts: z.array(Post),
-        friendStatus: z.enum(['me', 'friends', 'sent', 'received', 'none']),
+        isMe: z.boolean(),
       })
     ),
   },
@@ -327,76 +305,6 @@ route({
   request: idParam("Identifiant de l'utilisateur"),
   responses: { 200: ok(Stats) },
   codes: ['LL_USER_404'],
-});
-
-route({
-  method: 'get',
-  path: '/api/friends',
-  tags: ['Amis'],
-  summary: 'Mes amis',
-  responses: { 200: ok(z.object({ friends: z.array(User) })) },
-});
-
-route({
-  method: 'get',
-  path: '/api/friends/requests',
-  tags: ['Amis'],
-  summary: "Demandes d'ami reçues",
-  responses: { 200: ok(z.object({ requests: z.array(FriendRequest.extend({ from: User })) })) },
-});
-
-route({
-  method: 'post',
-  path: '/api/friends/requests',
-  tags: ['Amis'],
-  summary: "Envoyer une demande d'ami",
-  request: body(friendRequestSchema),
-  responses: { 201: ok(z.object({ request: FriendRequest }), 'Demande envoyée') },
-  codes: ['LL_VALIDATION_422', 'LL_USER_404', 'LL_FRIEND_REQUEST_409'],
-});
-
-route({
-  method: 'put',
-  path: '/api/friends/requests/{id}',
-  tags: ['Amis'],
-  summary: 'Accepter une demande',
-  request: idParam('Identifiant de la demande'),
-  responses: { 200: ok(z.object({ request: FriendRequest })) },
-  codes: ['LL_FRIEND_REQUEST_404'],
-});
-
-route({
-  method: 'delete',
-  path: '/api/friends/requests/{id}',
-  tags: ['Amis'],
-  summary: 'Refuser une demande',
-  request: idParam('Identifiant de la demande'),
-  responses: { 200: ok(Message) },
-  codes: ['LL_FRIEND_REQUEST_404'],
-});
-
-route({
-  method: 'get',
-  path: '/api/notifications',
-  tags: ['Notifications'],
-  summary: 'Mes notifications',
-  responses: { 200: ok(z.object({ notifications: z.array(Notification) })) },
-});
-
-route({
-  method: 'put',
-  path: '/api/notifications',
-  tags: ['Notifications'],
-  summary: 'Marquer toutes mes notifications comme lues',
-  responses: { 200: ok(Message) },
-});
-
-route({
-  method: 'get',
-  path: '/api/notifications/count',
-  tags: ['Notifications'],
-  summary: 'Compteurs de la barre de navigation',
-  responses: { 200: ok(z.object({ notifications: z.number().int(), friendRequests: z.number().int() })) },
 });
 
 // The doc routes themselves

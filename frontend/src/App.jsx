@@ -6,8 +6,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Feed from './pages/Feed';
 import Profile from './pages/Profile';
-import Friends from './pages/Friends';
-import Notifications from './pages/Notifications';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -52,8 +50,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Feed user={user} />} />
           <Route path="/profile/:id" element={<Profile user={user} setUser={setUser} />} />
-          <Route path="/friends" element={<Friends />} />
-          <Route path="/notifications" element={<Notifications />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
