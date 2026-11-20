@@ -88,4 +88,4 @@ export const POST = withErrorHandler(async (request) => {
 
 1. L'ajouter dans `ERRORS` de `backend/lib/errors.js` (préfixe `LL_`, suffixe = statut HTTP).
 2. L'ajouter dans le tableau ci-dessus.
-3. Le documenter dans les réponses de la route dans Swagger.
+3. Le documenter dans les réponses de la route : paramètre `codes` de `route()` dans `backend/lib/openapi.js` (visible sur `/api/docs`).

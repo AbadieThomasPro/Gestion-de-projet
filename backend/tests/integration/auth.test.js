@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { POST as register } from '@/app/api/auth/register/route';
 import { POST as login } from '@/app/api/auth/login/route';
 import { GET as me } from '@/app/api/auth/me/route';
-import { createUser, request, resetDb } from '../helpers';
+import { createUser, firstZoneId, request, resetDb } from '../helpers';
 
 beforeEach(resetDb);
 
@@ -11,19 +11,25 @@ describe('auth', () => {
     const res = await register(
       request('/api/auth/register', {
         method: 'POST',
-        body: { firstName: 'Chloé', lastName: 'Durand', email: ' Chloe@Test.dev ', password: 'secret1' },
+        body: {
+          firstName: 'Chloé',
+          lastName: 'Durand',
+          email: ' Chloe@Test.dev ',
+          password: 'secret1',
+          zoneId: await firstZoneId(),
+        },
       })
     );
     const data = await res.json();
 
     expect(res.status).toBe(201);
     expect(data.token).toBeTruthy();
-    expect(data.user).toMatchObject({ firstName: 'Chloé', email: 'chloe@test.dev' });
+    expect(data.user).toMatchObject({ firstName: 'Chloé', email: 'chloe@test.dev', zone: { name: 'Saint-Michel' } });
     expect(data.user.password).toBeUndefined();
   });
 
   it('refuses an email already used', async () => {
-    const body = { firstName: 'A', lastName: 'B', email: 'same@test.dev', password: 'secret1' };
+    const body = { firstName: 'A', lastName: 'B', email: 'same@test.dev', password: 'secret1', zoneId: await firstZoneId() };
     await register(request('/api/auth/register', { method: 'POST', body }));
     const res = await register(request('/api/auth/register', { method: 'POST', body }));
 

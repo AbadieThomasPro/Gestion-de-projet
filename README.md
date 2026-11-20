@@ -90,6 +90,7 @@ npm run dev                                # lance front + back
 |---|---|---|
 | Frontend | http://localhost:5173 | Page d'accueil |
 | Backend | http://localhost:3001/api/health | `{ "status": "ok" }` |
+| Swagger | http://localhost:3001/api/docs | Documentation interactive de l'API |
 
 ### Commandes
 
@@ -98,6 +99,7 @@ npm run dev                                # lance front + back
 | `npm run dev` | Lance front + back en mode dev |
 | `npm run docs` | Régénère la doc de l'API ([docs/API.md](docs/API.md)) |
 | `npm test` | Tests unitaires et d'intégration (Vitest, back puis front) |
+| `npm run storybook -w frontend` | Catalogue des composants sur http://localhost:6006 (viewport 800×600 par défaut) |
 | `npm run test:e2e` | Tests E2E Playwright en 800×600 (lance front et back) |
 | `npm run db:migrate -w backend` | Applique les migrations PostgreSQL (`prisma migrate deploy`) |
 | `npm run db:migrate:dev -w backend -- --name <nom>` | Crée une migration après modification de `schema.prisma` |
@@ -212,3 +214,6 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 | [docs/PERSONAS.md](docs/PERSONAS.md) | Nos 3 personas et leurs besoins |
 | [docs/STORYMAP.md](docs/STORYMAP.md) | Parcours utilisateur et découpage en releases |
 | [docs/API.md](docs/API.md) | Routes de l'API (générée automatiquement) |
+| [Swagger](http://localhost:3001/api/docs) | Doc interactive de l'API (`/api/docs`, document brut sur `/api/openapi.json`) |
+| [ERRORS.md](ERRORS.md) | Format des erreurs de l'API et catalogue des codes |
+| [docs/DATABASE.md](docs/DATABASE.md) | Schéma de la base, dictionnaire des données, migrations |

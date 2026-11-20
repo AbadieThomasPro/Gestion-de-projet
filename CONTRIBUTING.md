@@ -171,3 +171,17 @@ Tant que le MVP n'est pas livré, les versions sont en `0.x.y`. Le MVP sera la `
 2. Corriger, ouvrir une PR vers `main`.
 3. Après fusion, taguer une version **CORRECTIF** (ex. `v1.0.1`).
 4. Reporter le correctif dans `develop` et, si besoin, dans la `release/*` en cours.
+
+---
+
+## 📖 Documenter une route dans Swagger
+
+La doc Swagger (`/api/docs`) est générée par [`backend/lib/openapi.js`](backend/lib/openapi.js) à partir des schémas Zod de validation.
+
+1. Écrire le schéma Zod du corps dans `backend/lib/schemas.js` (il sert à la fois à valider et à documenter).
+2. Ajouter un appel `route({ method, path, tags, summary, request, responses, codes })` dans `backend/lib/openapi.js`, avec dans `codes` les erreurs possibles du [catalogue](ERRORS.md).
+3. Lancer `npm test` : un test échoue si une route de `backend/app/api` n'est pas documentée.
+
+## 🎨 Storybook et rendu 800×600
+
+Chaque composant de `frontend/src/components` a un fichier `*.stories.jsx` à côté de lui. Storybook (`npm run storybook -w frontend`) s'ouvre sur le viewport **Gérard 800×600** : c'est l'écran de référence du persona Gérard, tout doit y être lisible sans défilement horizontal. Les données de démonstration communes sont dans `frontend/src/stories/fixtures.js`.

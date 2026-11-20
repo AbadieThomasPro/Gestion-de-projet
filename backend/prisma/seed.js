@@ -17,8 +17,14 @@ if (existing > 0) {
   console.log('Demo data already present, nothing to do');
 } else {
   const password = await bcrypt.hash(PASSWORD, 10);
+  // Pilot zones are created by the migrations
+  const [saintMichel, saintCyprien] = await prisma.zone.findMany({ orderBy: { id: 'asc' }, take: 2 });
+  const zoneOf = { 'gerard@localloop.dev': saintMichel, 'karim@localloop.dev': saintMichel };
+
   const [gerard, ines, chloe, karim] = await Promise.all(
-    DEMO_USERS.map((u) => prisma.user.create({ data: { ...u, password } }))
+    DEMO_USERS.map((u) =>
+      prisma.user.create({ data: { ...u, password, zoneId: (zoneOf[u.email] || saintCyprien).id } })
+    )
   );
 
   const vide = await prisma.post.create({

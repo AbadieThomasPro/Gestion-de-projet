@@ -37,6 +37,9 @@ export const publicUserSelect = {
   email: true,
   bio: true,
   avatar: true,
+  // Only the neighbourhood is public, never an address
+  zoneId: true,
+  zone: { select: { id: true, name: true, city: true } },
   createdAt: true,
 };
 
