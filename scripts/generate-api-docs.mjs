@@ -20,10 +20,10 @@ const rows = [];
 for (const file of findRoutes(API_DIR).sort()) {
   const code = fs.readFileSync(file, 'utf-8');
   const url = '/api/' + path.relative(API_DIR, path.dirname(file)).split(path.sep).join('/');
-  const needsAuth = code.includes('getUserId(') ? 'Oui' : 'Non';
+  const needsAuth = code.includes('requireUser(') ? 'Oui' : 'Non';
 
-  // Finds "// comment" (optional) followed by "export function GET"
-  const regex = /(?:\/\/ (.*)\n)?export (?:async )?function (GET|POST|PUT|DELETE)/g;
+  // Finds "// comment" (optional) followed by "export const GET = withErrorHandler("
+  const regex = /(?:\/\/ (.*)\n)?export const (GET|POST|PUT|DELETE) = /g;
   for (const match of code.matchAll(regex)) {
     rows.push(`| ${match[2]} | \`${url}\` | ${needsAuth} | ${match[1] || ''} |`);
   }
@@ -34,6 +34,7 @@ const content = `# Documentation de l'API
 > Fichier généré automatiquement par \`npm run docs\`, ne pas modifier à la main.
 
 Les routes protégées attendent le header \`Authorization: Bearer <token>\`.
+Les erreurs suivent le format \`application/problem+json\` décrit dans [ERRORS.md](../ERRORS.md).
 
 | Méthode | Route | Connexion | Description |
 |---|---|:-:|---|

@@ -1,11 +1,11 @@
 import { desc, eq } from 'drizzle-orm';
 import { db, notifications, posts, users } from '@/db';
-import { getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
+import { publicUserColumns, requireUser } from '@/lib/auth';
+import { withErrorHandler } from '@/lib/handler';
 
 // My notifications
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   const list = await db
     .select({
@@ -26,14 +26,13 @@ export async function GET(request) {
     .orderBy(desc(notifications.createdAt));
 
   return Response.json({ notifications: list });
-}
+});
 
 // Mark all my notifications as read
-export async function PUT(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
+export const PUT = withErrorHandler(async (request) => {
+  const userId = requireUser(request);
 
   await db.update(notifications).set({ read: true }).where(eq(notifications.userId, userId));
 
   return Response.json({ message: 'Notifications lues' });
-}
+});

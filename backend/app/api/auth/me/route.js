@@ -1,12 +1,11 @@
-import { findPublicUser, getUserId, unauthorized } from '@/lib/auth';
+import { findPublicUser, requireUser } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
+import { withErrorHandler } from '@/lib/handler';
 
 // Get the logged user
-export async function GET(request) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
-
-  const user = await findPublicUser(userId);
-  if (!user) return unauthorized();
+export const GET = withErrorHandler(async (request) => {
+  const user = await findPublicUser(requireUser(request));
+  if (!user) throw new AppError('LL_AUTH_401');
 
   return Response.json({ user });
-}
+});

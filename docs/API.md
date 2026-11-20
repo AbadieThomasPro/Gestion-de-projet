@@ -3,6 +3,7 @@
 > Fichier généré automatiquement par `npm run docs`, ne pas modifier à la main.
 
 Les routes protégées attendent le header `Authorization: Bearer <token>`.
+Les erreurs suivent le format `application/problem+json` décrit dans [ERRORS.md](../ERRORS.md).
 
 | Méthode | Route | Connexion | Description |
 |---|---|:-:|---|

@@ -16,5 +16,7 @@ export default defineConfig({
     globalSetup: ['./tests/global-setup.js'],
     // Integration tests share one database: files run one after the other
     fileParallelism: false,
+    // The JSON logs of withErrorHandler are expected in the tests: do not print them
+    onConsoleLog: (log) => !log.startsWith('{"time"'),
   },
 });

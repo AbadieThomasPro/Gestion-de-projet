@@ -1,45 +1,36 @@
 import { and, eq } from 'drizzle-orm';
 import { db, friendRequests } from '@/db';
-import { getUserId, unauthorized } from '@/lib/auth';
+import { requireUser } from '@/lib/auth';
+import { AppError } from '@/lib/errors';
+import { withErrorHandler } from '@/lib/handler';
 import { isUuid } from '@/lib/ids';
 
-// Pending request received by the user
+// Pending request received by the user, LL_FRIEND_REQUEST_404 for an invalid id
 function pendingRequest(id, userId) {
-  return and(
-    eq(friendRequests.id, id),
-    eq(friendRequests.toId, userId),
-    eq(friendRequests.status, 'pending')
-  );
-}
-
-function notFound() {
-  return Response.json({ error: 'Demande introuvable' }, { status: 404 });
+  if (!isUuid(id)) throw new AppError('LL_FRIEND_REQUEST_404');
+  return and(eq(friendRequests.id, id), eq(friendRequests.toId, userId), eq(friendRequests.status, 'pending'));
 }
 
 // Accept a request
-export async function PUT(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
-  if (!isUuid(params.id)) return notFound();
+export const PUT = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
 
   const [friendRequest] = await db
     .update(friendRequests)
     .set({ status: 'accepted' })
     .where(pendingRequest(params.id, userId))
     .returning();
-  if (!friendRequest) return notFound();
+  if (!friendRequest) throw new AppError('LL_FRIEND_REQUEST_404');
 
   return Response.json({ request: friendRequest });
-}
+});
 
 // Refuse a request
-export async function DELETE(request, { params }) {
-  const userId = getUserId(request);
-  if (!userId) return unauthorized();
-  if (!isUuid(params.id)) return notFound();
+export const DELETE = withErrorHandler(async (request, { params }) => {
+  const userId = requireUser(request);
 
   const deleted = await db.delete(friendRequests).where(pendingRequest(params.id, userId)).returning();
-  if (deleted.length === 0) return notFound();
+  if (deleted.length === 0) throw new AppError('LL_FRIEND_REQUEST_404');
 
   return Response.json({ message: 'Demande refusée' });
-}
+});
