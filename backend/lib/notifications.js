@@ -1,10 +1,9 @@
-import { eq } from 'drizzle-orm';
-import { db, notifications, posts } from '@/db';
+import { prisma } from './prisma';
 
 // Notifies the author of a post when someone likes or comments it
 export async function addNotification({ type, postId, fromId }) {
-  const [post] = await db.select({ authorId: posts.authorId }).from(posts).where(eq(posts.id, postId));
+  const post = await prisma.post.findUnique({ where: { id: postId }, select: { authorId: true } });
   if (!post || post.authorId === fromId) return;
 
-  await db.insert(notifications).values({ userId: post.authorId, fromId, type, postId });
+  await prisma.notification.create({ data: { userId: post.authorId, fromId, type, postId } });
 }
