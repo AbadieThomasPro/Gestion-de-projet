@@ -1,14 +1,19 @@
 name: Docker
 
 # Builds the images and pushes them on GitHub Container Registry
+# On develop: builds and tags 'recette' for staging deployment [LL-206]
+# On main: builds production images
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags: ['v*']
+  workflow_dispatch:
 
 jobs:
   docker:
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/develop' && 'recette' || 'production' }}
     permissions:
       contents: read
       packages: write
@@ -28,6 +33,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=recette,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - uses: docker/setup-buildx-action@v3
 

@@ -190,7 +190,7 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 | [CI](.github/workflows/ci.yml) | Chaque PR et push sur `main` / `develop` | Vérifie que la doc de l'API est à jour |
 | [PR check](.github/workflows/pr-check.yml) | Ouverture / modification d'une PR | Vérifie le nom de la branche et le titre (Conventional Commits), ajoute les labels `frontend` / `backend` / `infra` / `documentation` |
 | [Project](.github/workflows/project.yml) | Issue créée, PR ouverte / mergée | Ajoute l'issue au Project, puis passe l'issue `LL-<id>` de la branche en **En review** puis **À tester** |
-| [Docker](.github/workflows/docker.yml) | Push sur `main` ou tag `v*` | Build les images front et back et les publie sur GitHub Container Registry |
+| [Docker](.github/workflows/docker.yml) | Push sur `main` / `develop` ou tag `v*` | Build les images front et back et les publie sur GitHub Container Registry (tag `recette` et environnement GitHub *recette* sur `develop`) |
 | [Release](.github/workflows/release.yml) | Tag `v*` | Crée la release GitHub avec la liste des PR, classées par label |
 | [Dependabot](.github/dependabot.yml) | Chaque semaine | Ouvre des PR pour mettre à jour les dépendances |
 
