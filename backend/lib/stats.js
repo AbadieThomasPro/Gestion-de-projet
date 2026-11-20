@@ -1,3 +1,9 @@
+import { eq, sql } from 'drizzle-orm';
+import { db, posts } from '@/db';
+
+// Drizzle writes posts.id as a bare "id" in subqueries, which would point to comments.id
+const POST_ID = sql.raw('"posts"."id"');
+
 // Day of a date, as "YYYY-MM-DD" in UTC (the dates are stored in UTC)
 function toDay(date) {
   return new Date(date).toISOString().slice(0, 10);
@@ -18,17 +24,23 @@ export function computeStreak(dates, today) {
 }
 
 // Posts, likes and comments received on these posts, and current streak of a user
-export function getUserStats(db, userId, today = new Date()) {
-  const posts = db.posts.filter((p) => p.authorId === userId);
-  const postIds = new Set(posts.map((p) => p.id));
+export async function getUserStats(userId, today = new Date()) {
+  const rows = await db
+    .select({
+      createdAt: posts.createdAt,
+      likes: sql`(select count(*) from likes where likes.post_id = ${POST_ID})`.mapWith(Number),
+      comments: sql`(select count(*) from comments where comments.post_id = ${POST_ID})`.mapWith(Number),
+    })
+    .from(posts)
+    .where(eq(posts.authorId, userId));
 
   return {
     userId,
-    posts: posts.length,
-    likesReceived: db.likes.filter((l) => postIds.has(l.postId)).length,
-    commentsReceived: db.comments.filter((c) => postIds.has(c.postId)).length,
+    posts: rows.length,
+    likesReceived: rows.reduce((sum, r) => sum + r.likes, 0),
+    commentsReceived: rows.reduce((sum, r) => sum + r.comments, 0),
     currentStreak: computeStreak(
-      posts.map((p) => p.createdAt),
+      rows.map((r) => r.createdAt),
       today
     ),
   };

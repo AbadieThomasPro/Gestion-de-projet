@@ -1,17 +1,23 @@
-import { readDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
+import { and, eq, or } from 'drizzle-orm';
+import { db, friendRequests, users } from '@/db';
+import { getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
 
 // List of my friends
-export function GET(request) {
+export async function GET(request) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const db = readDb();
-  const friendIds = db.friendRequests
-    .filter((r) => r.status === 'accepted' && (r.fromId === userId || r.toId === userId))
-    .map((r) => (r.fromId === userId ? r.toId : r.fromId));
-
-  const friends = db.users.filter((u) => friendIds.includes(u.id)).map(publicUser);
+  const friends = await db
+    .select(publicUserColumns)
+    .from(friendRequests)
+    .innerJoin(
+      users,
+      or(
+        and(eq(friendRequests.fromId, userId), eq(users.id, friendRequests.toId)),
+        and(eq(friendRequests.toId, userId), eq(users.id, friendRequests.fromId))
+      )
+    )
+    .where(eq(friendRequests.status, 'accepted'));
 
   return Response.json({ friends });
 }

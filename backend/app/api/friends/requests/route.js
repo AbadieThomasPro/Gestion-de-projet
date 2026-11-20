@@ -1,19 +1,26 @@
-import { readDb, writeDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
+import { and, eq } from 'drizzle-orm';
+import { db, friendRequests, users } from '@/db';
+import { findPublicUser, getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
 import { getFriendStatus } from '@/lib/friends';
+import { isUuid } from '@/lib/ids';
 
 // Requests I received
-export function GET(request) {
+export async function GET(request) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const db = readDb();
-  const requests = db.friendRequests
-    .filter((r) => r.toId === userId && r.status === 'pending')
-    .map((r) => ({
-      ...r,
-      from: publicUser(db.users.find((u) => u.id === r.fromId)),
-    }));
+  const requests = await db
+    .select({
+      id: friendRequests.id,
+      fromId: friendRequests.fromId,
+      toId: friendRequests.toId,
+      status: friendRequests.status,
+      createdAt: friendRequests.createdAt,
+      from: publicUserColumns,
+    })
+    .from(friendRequests)
+    .innerJoin(users, eq(users.id, friendRequests.fromId))
+    .where(and(eq(friendRequests.toId, userId), eq(friendRequests.status, 'pending')));
 
   return Response.json({ requests });
 }
@@ -24,25 +31,15 @@ export async function POST(request) {
   if (!userId) return unauthorized();
 
   const { toId } = await request.json();
-  const db = readDb();
 
-  if (!db.users.some((u) => u.id === toId)) {
+  if (!isUuid(toId) || !(await findPublicUser(toId))) {
     return Response.json({ error: 'Utilisateur introuvable' }, { status: 404 });
   }
-  if (getFriendStatus(db, userId, toId) !== 'none') {
+  if ((await getFriendStatus(userId, toId)) !== 'none') {
     return Response.json({ error: 'Demande impossible' }, { status: 400 });
   }
 
-  const friendRequest = {
-    id: crypto.randomUUID(),
-    fromId: userId,
-    toId,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-  };
-
-  db.friendRequests.push(friendRequest);
-  writeDb(db);
+  const [friendRequest] = await db.insert(friendRequests).values({ fromId: userId, toId }).returning();
 
   return Response.json({ request: friendRequest }, { status: 201 });
 }

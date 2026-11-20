@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
-import { readDb, writeDb } from '@/lib/db';
+import { eq } from 'drizzle-orm';
+import { db, users } from '@/db';
 import { createToken, publicUser } from '@/lib/auth';
 
 // Create an account
@@ -13,26 +14,21 @@ export async function POST(request) {
     return Response.json({ error: 'Le mot de passe doit faire au moins 6 caractères' }, { status: 400 });
   }
 
-  const db = readDb();
   const emailLower = email.trim().toLowerCase();
-
-  if (db.users.some((u) => u.email === emailLower)) {
+  const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, emailLower));
+  if (existing) {
     return Response.json({ error: 'Cet email est déjà utilisé' }, { status: 409 });
   }
 
-  const user = {
-    id: crypto.randomUUID(),
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    email: emailLower,
-    password: await bcrypt.hash(password, 10),
-    bio: '',
-    avatar: '',
-    createdAt: new Date().toISOString(),
-  };
-
-  db.users.push(user);
-  writeDb(db);
+  const [user] = await db
+    .insert(users)
+    .values({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: emailLower,
+      password: await bcrypt.hash(password, 10),
+    })
+    .returning();
 
   return Response.json({ token: createToken(user), user: publicUser(user) }, { status: 201 });
 }

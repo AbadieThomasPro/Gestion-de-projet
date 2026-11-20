@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import { eq } from 'drizzle-orm';
+import { db, users } from '@/db';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
@@ -23,8 +25,24 @@ export function unauthorized() {
   return Response.json({ error: 'Vous devez être connecté' }, { status: 401 });
 }
 
+// Columns of a user that can be sent to the client (never the password)
+export const publicUserColumns = {
+  id: users.id,
+  firstName: users.firstName,
+  lastName: users.lastName,
+  email: users.email,
+  bio: users.bio,
+  avatar: users.avatar,
+  createdAt: users.createdAt,
+};
+
 // Removes the password before sending a user to the client
 export function publicUser(user) {
   const { password, ...rest } = user;
   return rest;
+}
+
+export async function findPublicUser(id) {
+  const [user] = await db.select(publicUserColumns).from(users).where(eq(users.id, id));
+  return user;
 }

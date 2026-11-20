@@ -1,15 +1,22 @@
-import { readDb } from '@/lib/db';
+import { and, count, eq } from 'drizzle-orm';
+import { db, friendRequests, notifications } from '@/db';
 import { getUserId, unauthorized } from '@/lib/auth';
 
 // Numbers shown in red in the navbar
-export function GET(request) {
+export async function GET(request) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const db = readDb();
+  const [[unread], [pending]] = await Promise.all([
+    db
+      .select({ value: count() })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.read, false))),
+    db
+      .select({ value: count() })
+      .from(friendRequests)
+      .where(and(eq(friendRequests.toId, userId), eq(friendRequests.status, 'pending'))),
+  ]);
 
-  return Response.json({
-    notifications: db.notifications.filter((n) => n.userId === userId && !n.read).length,
-    friendRequests: db.friendRequests.filter((r) => r.toId === userId && r.status === 'pending').length,
-  });
+  return Response.json({ notifications: unread.value, friendRequests: pending.value });
 }

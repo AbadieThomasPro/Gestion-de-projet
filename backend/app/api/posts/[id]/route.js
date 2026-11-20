@@ -1,13 +1,14 @@
-import { readDb, writeDb } from '@/lib/db';
+import { eq } from 'drizzle-orm';
+import { db, posts } from '@/db';
 import { getUserId, unauthorized } from '@/lib/auth';
+import { isUuid } from '@/lib/ids';
 
 // Delete one of my posts
-export function DELETE(request, { params }) {
+export async function DELETE(request, { params }) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const db = readDb();
-  const post = db.posts.find((p) => p.id === params.id);
+  const [post] = isUuid(params.id) ? await db.select().from(posts).where(eq(posts.id, params.id)) : [];
 
   if (!post) {
     return Response.json({ error: 'Publication introuvable' }, { status: 404 });
@@ -16,11 +17,8 @@ export function DELETE(request, { params }) {
     return Response.json({ error: 'Vous ne pouvez supprimer que vos publications' }, { status: 403 });
   }
 
-  db.posts = db.posts.filter((p) => p.id !== post.id);
-  db.likes = db.likes.filter((l) => l.postId !== post.id);
-  db.comments = db.comments.filter((c) => c.postId !== post.id);
-  db.notifications = db.notifications.filter((n) => n.postId !== post.id);
-  writeDb(db);
+  // Likes, comments and notifications of the post are deleted in cascade
+  await db.delete(posts).where(eq(posts.id, post.id));
 
   return Response.json({ message: 'Publication supprimée' });
 }
