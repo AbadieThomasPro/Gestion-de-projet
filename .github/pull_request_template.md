@@ -13,7 +13,9 @@ Closes #<!-- numéro de l'issue -->
 ## Checklist
 
 - [ ] La branche part de `develop` à jour
-- [ ] Le titre suit Conventional Commits (`feat(frontend): ...`)
+- [ ] La branche respecte le format (`feature/LL-xxx-...`, `fix/LL-xxx-...`)
+- [ ] Le titre de la PR suit strictement Conventional Commits (types: `feat`, `fix`, `refactor`, `docs`, `test`, `ci`, `chore` | scopes autorisés: `frontend`, `backend`, `database`, `infra` ou aucun scope)
+- [ ] Le titre est en anglais à l'impératif, sans majuscule initiale, ticket `[LL-xxx]` à la fin s'il y en a un
 - [ ] Testé en local, `npm test` passe
 - [ ] Rendu vérifié en **800×600** (viewport « Gérard » de Storybook, ou test E2E), sans défilement horizontal
 - [ ] Composant ajouté ou modifié : story Storybook à jour
