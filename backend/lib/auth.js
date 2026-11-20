@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { eq } from 'drizzle-orm';
-import { db, users } from '@/db';
+import { prisma } from './prisma';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
@@ -25,24 +24,17 @@ export function unauthorized() {
   return Response.json({ error: 'Vous devez être connecté' }, { status: 401 });
 }
 
-// Columns of a user that can be sent to the client (never the password)
-export const publicUserColumns = {
-  id: users.id,
-  firstName: users.firstName,
-  lastName: users.lastName,
-  email: users.email,
-  bio: users.bio,
-  avatar: users.avatar,
-  createdAt: users.createdAt,
+// Fields of a user that can be sent to the client (never the password)
+export const publicUserSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  bio: true,
+  avatar: true,
+  createdAt: true,
 };
 
-// Removes the password before sending a user to the client
-export function publicUser(user) {
-  const { password, ...rest } = user;
-  return rest;
-}
-
-export async function findPublicUser(id) {
-  const [user] = await db.select(publicUserColumns).from(users).where(eq(users.id, id));
-  return user;
+export function findPublicUser(id) {
+  return prisma.user.findUnique({ where: { id }, select: publicUserSelect });
 }

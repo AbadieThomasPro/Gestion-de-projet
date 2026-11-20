@@ -1,23 +1,21 @@
-import { and, eq, or } from 'drizzle-orm';
-import { db, friendRequests, users } from '@/db';
-import { getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { getUserId, publicUserSelect, unauthorized } from '@/lib/auth';
 
 // List of my friends
 export async function GET(request) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const friends = await db
-    .select(publicUserColumns)
-    .from(friendRequests)
-    .innerJoin(
-      users,
-      or(
-        and(eq(friendRequests.fromId, userId), eq(users.id, friendRequests.toId)),
-        and(eq(friendRequests.toId, userId), eq(users.id, friendRequests.fromId))
-      )
-    )
-    .where(eq(friendRequests.status, 'accepted'));
+  const accepted = { status: 'accepted' };
+  const friends = await prisma.user.findMany({
+    where: {
+      OR: [
+        { sentFriendRequests: { some: { ...accepted, toId: userId } } },
+        { receivedFriendRequests: { some: { ...accepted, fromId: userId } } },
+      ],
+    },
+    select: publicUserSelect,
+  });
 
   return Response.json({ friends });
 }

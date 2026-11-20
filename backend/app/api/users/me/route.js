@@ -1,6 +1,5 @@
-import { eq } from 'drizzle-orm';
-import { db, users } from '@/db';
-import { findPublicUser, getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { findPublicUser, getUserId, publicUserSelect, unauthorized } from '@/lib/auth';
 
 // Edit my profile
 export async function PUT(request) {
@@ -10,17 +9,13 @@ export async function PUT(request) {
   const { firstName, lastName, bio, avatar } = await request.json();
   if (!(await findPublicUser(userId))) return unauthorized();
 
-  const changes = {};
-  if (firstName?.trim()) changes.firstName = firstName.trim();
-  if (lastName?.trim()) changes.lastName = lastName.trim();
-  if (bio !== undefined) changes.bio = String(bio).trim();
-  if (avatar !== undefined) changes.avatar = String(avatar).trim();
+  const data = {};
+  if (firstName?.trim()) data.firstName = firstName.trim();
+  if (lastName?.trim()) data.lastName = lastName.trim();
+  if (bio !== undefined) data.bio = String(bio).trim();
+  if (avatar !== undefined) data.avatar = String(avatar).trim();
 
-  if (Object.keys(changes).length === 0) {
-    return Response.json({ user: await findPublicUser(userId) });
-  }
-
-  const [user] = await db.update(users).set(changes).where(eq(users.id, userId)).returning(publicUserColumns);
+  const user = await prisma.user.update({ where: { id: userId }, data, select: publicUserSelect });
 
   return Response.json({ user });
 }

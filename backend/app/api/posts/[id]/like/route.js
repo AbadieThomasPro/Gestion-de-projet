@@ -1,5 +1,4 @@
-import { and, count, eq } from 'drizzle-orm';
-import { db, likes, notifications, posts } from '@/db';
+import { prisma } from '@/lib/prisma';
 import { getUserId, unauthorized } from '@/lib/auth';
 import { addNotification } from '@/lib/notifications';
 import { isUuid } from '@/lib/ids';
@@ -9,34 +8,24 @@ export async function POST(request, { params }) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const [post] = isUuid(params.id)
-    ? await db.select({ id: posts.id }).from(posts).where(eq(posts.id, params.id))
-    : [];
+  const post = isUuid(params.id) && (await prisma.post.findUnique({ where: { id: params.id } }));
   if (!post) {
     return Response.json({ error: 'Publication introuvable' }, { status: 404 });
   }
 
-  const myLike = and(eq(likes.postId, post.id), eq(likes.userId, userId));
-  const removed = await db.delete(likes).where(myLike).returning();
-  const liked = removed.length === 0;
+  const { count: removed } = await prisma.like.deleteMany({ where: { postId: post.id, userId } });
+  const liked = removed === 0;
 
   if (liked) {
-    await db.insert(likes).values({ postId: post.id, userId }).onConflictDoNothing();
+    await prisma.like.createMany({ data: { postId: post.id, userId }, skipDuplicates: true });
     await addNotification({ type: 'like', postId: post.id, fromId: userId });
   } else {
-    await db
-      .delete(notifications)
-      .where(
-        and(
-          eq(notifications.type, 'like'),
-          eq(notifications.postId, post.id),
-          eq(notifications.fromId, userId),
-          eq(notifications.read, false)
-        )
-      );
+    await prisma.notification.deleteMany({
+      where: { type: 'like', postId: post.id, fromId: userId, read: false },
+    });
   }
 
-  const [{ value }] = await db.select({ value: count() }).from(likes).where(eq(likes.postId, post.id));
+  const likesCount = await prisma.like.count({ where: { postId: post.id } });
 
-  return Response.json({ liked, likesCount: value });
+  return Response.json({ liked, likesCount });
 }

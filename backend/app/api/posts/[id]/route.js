@@ -1,5 +1,4 @@
-import { eq } from 'drizzle-orm';
-import { db, posts } from '@/db';
+import { prisma } from '@/lib/prisma';
 import { getUserId, unauthorized } from '@/lib/auth';
 import { isUuid } from '@/lib/ids';
 
@@ -8,7 +7,7 @@ export async function DELETE(request, { params }) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const [post] = isUuid(params.id) ? await db.select().from(posts).where(eq(posts.id, params.id)) : [];
+  const post = isUuid(params.id) && (await prisma.post.findUnique({ where: { id: params.id } }));
 
   if (!post) {
     return Response.json({ error: 'Publication introuvable' }, { status: 404 });
@@ -18,7 +17,7 @@ export async function DELETE(request, { params }) {
   }
 
   // Likes, comments and notifications of the post are deleted in cascade
-  await db.delete(posts).where(eq(posts.id, post.id));
+  await prisma.post.delete({ where: { id: post.id } });
 
   return Response.json({ message: 'Publication supprimée' });
 }
