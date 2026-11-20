@@ -6,6 +6,8 @@ export const gerard = {
   email: 'gerard@localloop.dev',
   bio: 'Retraité, jardinier du dimanche.',
   avatar: '',
+  zoneId: 1,
+  zoneName: 'Saint-Michel',
   createdAt: '2026-11-01T09:00:00.000Z',
 };
 
@@ -21,3 +23,11 @@ export const post = {
   likedByMe: false,
   commentsCount: 1,
 };
+
+export const zones = [
+  { id: 1, name: 'Saint-Michel', city: 'Toulouse' },
+  { id: 2, name: 'Saint-Cyprien', city: 'Toulouse' },
+  { id: 3, name: 'Les Carmes', city: 'Toulouse' },
+  { id: 4, name: 'Saint-Aubin', city: 'Toulouse' },
+  { id: 5, name: 'Compans-Caffarelli', city: 'Toulouse' },
+];

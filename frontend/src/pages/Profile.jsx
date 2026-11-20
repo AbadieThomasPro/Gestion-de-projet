@@ -78,6 +78,7 @@ export default function Profile({ user, setUser }) {
         <h2>
           {profile.firstName} {profile.lastName}
         </h2>
+        {profile.zoneName && <p className="zone">Quartier : {profile.zoneName}</p>}
         {profile.bio && <p>{profile.bio}</p>}
 
         {friendStatus === 'me' && !editing && (

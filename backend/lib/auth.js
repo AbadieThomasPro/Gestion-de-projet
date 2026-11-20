@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db, users } from '@/db';
 import { AppError } from './errors';
 import { isUuid } from './ids';
@@ -38,14 +38,11 @@ export const publicUserColumns = {
   email: users.email,
   bio: users.bio,
   avatar: users.avatar,
+  // Only the neighbourhood is public, never an address
+  zoneId: users.zoneId,
+  zoneName: sql`(select zones.name from zones where zones.id = "users"."zone_id")`,
   createdAt: users.createdAt,
 };
-
-// Removes the password before sending a user to the client
-export function publicUser(user) {
-  const { password, ...rest } = user;
-  return rest;
-}
 
 export async function findPublicUser(id) {
   const [user] = await db.select(publicUserColumns).from(users).where(eq(users.id, id));
