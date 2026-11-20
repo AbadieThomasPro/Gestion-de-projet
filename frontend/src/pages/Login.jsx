@@ -20,7 +20,7 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="auth-page">
-      <h1 className="logo">facebook-like</h1>
+      <h1 className="logo">LocalLoop</h1>
       <form className="card auth-form" onSubmit={handleSubmit}>
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input

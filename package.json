@@ -1,5 +1,5 @@
 {
-  "name": "facebook-like",
+  "name": "localloop",
   "private": true,
   "workspaces": [
     "frontend",

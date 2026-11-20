@@ -30,7 +30,7 @@ export default function Navbar({ user, onLogout }) {
   return (
     <nav className="navbar">
       <Link to="/" className="logo">
-        facebook-like
+        LocalLoop
       </Link>
       <div className="nav-links">
         <Link to="/">Accueil</Link>
