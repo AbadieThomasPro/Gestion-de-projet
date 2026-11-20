@@ -1,23 +1,30 @@
-import { readDb, writeDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
+import { asc, eq } from 'drizzle-orm';
+import { comments, db, posts, users } from '@/db';
+import { findPublicUser, getUserId, publicUserColumns, unauthorized } from '@/lib/auth';
 import { addNotification } from '@/lib/notifications';
-
-function withAuthor(db, comment) {
-  const author = db.users.find((u) => u.id === comment.authorId);
-  return { ...comment, author: author ? publicUser(author) : null };
-}
+import { isUuid } from '@/lib/ids';
 
 // Comments of a post
-export function GET(request, { params }) {
+export async function GET(request, { params }) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
+  if (!isUuid(params.id)) return Response.json({ comments: [] });
 
-  const db = readDb();
-  const comments = db.comments
-    .filter((c) => c.postId === params.id)
-    .map((c) => withAuthor(db, c));
+  const list = await db
+    .select({
+      id: comments.id,
+      postId: comments.postId,
+      authorId: comments.authorId,
+      content: comments.content,
+      createdAt: comments.createdAt,
+      author: publicUserColumns,
+    })
+    .from(comments)
+    .innerJoin(users, eq(users.id, comments.authorId))
+    .where(eq(comments.postId, params.id))
+    .orderBy(asc(comments.createdAt));
 
-  return Response.json({ comments });
+  return Response.json({ comments: list });
 }
 
 // Comment a post
@@ -30,22 +37,18 @@ export async function POST(request, { params }) {
     return Response.json({ error: 'Le commentaire est vide' }, { status: 400 });
   }
 
-  const db = readDb();
-  if (!db.posts.some((p) => p.id === params.id)) {
+  const [post] = isUuid(params.id)
+    ? await db.select({ id: posts.id }).from(posts).where(eq(posts.id, params.id))
+    : [];
+  if (!post) {
     return Response.json({ error: 'Publication introuvable' }, { status: 404 });
   }
 
-  const comment = {
-    id: crypto.randomUUID(),
-    postId: params.id,
-    authorId: userId,
-    content: content.trim(),
-    createdAt: new Date().toISOString(),
-  };
+  const [comment] = await db
+    .insert(comments)
+    .values({ postId: post.id, authorId: userId, content: content.trim() })
+    .returning();
+  await addNotification({ type: 'comment', postId: post.id, fromId: userId });
 
-  db.comments.push(comment);
-  addNotification(db, { type: 'comment', postId: params.id, fromId: userId });
-  writeDb(db);
-
-  return Response.json({ comment: withAuthor(db, comment) }, { status: 201 });
+  return Response.json({ comment: { ...comment, author: await findPublicUser(userId) } }, { status: 201 });
 }

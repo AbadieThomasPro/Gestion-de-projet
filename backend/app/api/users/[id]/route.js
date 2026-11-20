@@ -1,26 +1,24 @@
-import { readDb } from '@/lib/db';
-import { getUserId, publicUser, unauthorized } from '@/lib/auth';
-import { formatPost, sortByDate } from '@/lib/posts';
+import { eq } from 'drizzle-orm';
+import { posts } from '@/db';
+import { findPublicUser, getUserId, unauthorized } from '@/lib/auth';
+import { listPosts } from '@/lib/posts';
 import { getFriendStatus } from '@/lib/friends';
+import { isUuid } from '@/lib/ids';
 
 // Profile of a user with their posts
-export function GET(request, { params }) {
+export async function GET(request, { params }) {
   const userId = getUserId(request);
   if (!userId) return unauthorized();
 
-  const db = readDb();
-  const user = db.users.find((u) => u.id === params.id);
+  const user = isUuid(params.id) ? await findPublicUser(params.id) : null;
   if (!user) {
     return Response.json({ error: 'Utilisateur introuvable' }, { status: 404 });
   }
 
-  const posts = sortByDate(db.posts.filter((p) => p.authorId === user.id)).map((p) =>
-    formatPost(db, p, userId)
-  );
+  const [userPosts, friendStatus] = await Promise.all([
+    listPosts({ userId, where: eq(posts.authorId, user.id) }),
+    getFriendStatus(userId, user.id),
+  ]);
 
-  return Response.json({
-    user: publicUser(user),
-    posts,
-    friendStatus: getFriendStatus(db, userId, user.id),
-  });
+  return Response.json({ user, posts: userPosts, friendStatus });
 }

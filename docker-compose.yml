@@ -1,4 +1,21 @@
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: localloop
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localloop}
+      POSTGRES_DB: localloop
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U localloop -d localloop"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   backend:
     build:
       context: .
@@ -8,8 +25,10 @@ services:
     environment:
       JWT_SECRET: ${JWT_SECRET:-change-me}
       FRONT_URL: http://localhost:5173
-    volumes:
-      - db-data:/app/backend/data
+      DATABASE_URL: postgres://localloop:${POSTGRES_PASSWORD:-localloop}@db:5432/localloop
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/health"]

@@ -1,19 +1,40 @@
-import { publicUser } from './auth';
+import { desc, eq, sql } from 'drizzle-orm';
+import { db, posts, users } from '@/db';
+import { publicUserColumns } from './auth';
 
-// Adds author, likes and comments count to a post
-export function formatPost(db, post, userId) {
-  const author = db.users.find((u) => u.id === post.authorId);
-  const likes = db.likes.filter((l) => l.postId === post.id);
+// Drizzle writes posts.id as a bare "id" in subqueries, which would point to comments.id
+const POST_ID = sql.raw('"posts"."id"');
 
+// Columns of a post sent to the client: author, likes and comments count
+function postColumns(userId) {
   return {
-    ...post,
-    author: author ? publicUser(author) : null,
-    likesCount: likes.length,
-    likedByMe: likes.some((l) => l.userId === userId),
-    commentsCount: db.comments.filter((c) => c.postId === post.id).length,
+    id: posts.id,
+    authorId: posts.authorId,
+    content: posts.content,
+    createdAt: posts.createdAt,
+    author: publicUserColumns,
+    likesCount: sql`(select count(*) from likes where likes.post_id = ${POST_ID})`.mapWith(Number),
+    likedByMe: sql`exists(select 1 from likes where likes.post_id = ${POST_ID} and likes.user_id = ${userId})`.mapWith(
+      Boolean
+    ),
+    commentsCount: sql`(select count(*) from comments where comments.post_id = ${POST_ID})`.mapWith(Number),
   };
 }
 
-export function sortByDate(list) {
-  return [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+// Posts from the most recent, with optional filter and pagination
+export function listPosts({ userId, where, limit, offset = 0 }) {
+  let query = db
+    .select(postColumns(userId))
+    .from(posts)
+    .innerJoin(users, eq(users.id, posts.authorId))
+    .where(where)
+    .orderBy(desc(posts.createdAt), desc(posts.id))
+    .offset(offset);
+  if (limit) query = query.limit(limit);
+  return query;
+}
+
+export async function getPost(postId, userId) {
+  const [post] = await listPosts({ userId, where: eq(posts.id, postId), limit: 1 });
+  return post;
 }

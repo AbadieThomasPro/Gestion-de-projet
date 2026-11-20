@@ -54,6 +54,7 @@ Le découpage en releases est détaillé dans la [story map](docs/STORYMAP.md).
 | Node.js | ≥ 20 (22 recommandé, cf. `.nvmrc`) | `node -v` |
 | npm | ≥ 10 | `npm -v` |
 | Git | ≥ 2.30 | `git --version` |
+| PostgreSQL | 16 (ou Docker) | `psql --version` |
 
 ### Lancer avec Docker (le plus simple)
 
@@ -73,6 +74,9 @@ nvm use                                    # optionnel : utilise la version de .
 npm install                                # installe front + back
 cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
+docker compose up -d db                    # PostgreSQL (ou une instance locale, cf. DATABASE_URL)
+npm run db:migrate -w backend              # crée les tables
+npm run db:seed -w backend                 # comptes de démo (mot de passe : localloop)
 npm run dev                                # lance front + back
 ```
 
@@ -89,13 +93,18 @@ npm run dev                                # lance front + back
 |---|---|
 | `npm run dev` | Lance front + back en mode dev |
 | `npm run docs` | Régénère la doc de l'API ([docs/API.md](docs/API.md)) |
+| `npm run db:migrate -w backend` | Applique les migrations PostgreSQL |
+| `npm run db:generate -w backend` | Génère une migration après modification du schéma |
+| `npm run db:seed -w backend` | Ajoute les données de démonstration |
+
+Le schéma et le choix de l'ORM (Drizzle) sont décrits dans [docs/DATABASE.md](docs/DATABASE.md).
 
 ### Structure
 
 ```text
 Gestion-de-projet/
 ├── frontend/   # React + Vite (servi par nginx en production)
-├── backend/    # Next.js (routes API dans app/api/)
+├── backend/    # Next.js (routes API dans app/api/, base dans db/)
 ├── docs/       # Personas, story map, doc de l'API…
 ├── scripts/    # Génération de la doc de l'API
 └── .github/    # CI/CD et automations

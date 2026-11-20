@@ -1,15 +1,10 @@
+import { eq } from 'drizzle-orm';
+import { db, notifications, posts } from '@/db';
+
 // Notifies the author of a post when someone likes or comments it
-export function addNotification(db, { type, postId, fromId }) {
-  const post = db.posts.find((p) => p.id === postId);
+export async function addNotification({ type, postId, fromId }) {
+  const [post] = await db.select({ authorId: posts.authorId }).from(posts).where(eq(posts.id, postId));
   if (!post || post.authorId === fromId) return;
 
-  db.notifications.push({
-    id: crypto.randomUUID(),
-    userId: post.authorId,
-    fromId,
-    type,
-    postId,
-    read: false,
-    createdAt: new Date().toISOString(),
-  });
+  await db.insert(notifications).values({ userId: post.authorId, fromId, type, postId });
 }

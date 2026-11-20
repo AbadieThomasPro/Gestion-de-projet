@@ -16,7 +16,9 @@ COPY package.json package-lock.json ./
 COPY backend/package.json backend/
 COPY frontend/package.json frontend/
 RUN npm ci -w backend --omit=dev
-COPY backend/next.config.js backend/
+COPY backend/next.config.mjs backend/
+# Migrations are applied at startup
+COPY backend/db backend/db
 COPY --from=build /app/backend/.next backend/.next
 EXPOSE 3001
-CMD ["npm", "start", "-w", "backend"]
+CMD ["sh", "-c", "npm run db:migrate -w backend && npm start -w backend"]
