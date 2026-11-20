@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // pg is a Node.js dependency, it must not be bundled by webpack
-  experimental: { serverComponentsExternalPackages: ['pg'] },
+  // Node.js dependencies read at runtime, they must not be bundled by webpack
+  experimental: { serverComponentsExternalPackages: ['pg', 'swagger-ui-dist'] },
 };
 
 export default nextConfig;

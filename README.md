@@ -88,6 +88,7 @@ npm run dev                                # lance front + back
 |---|---|---|
 | Frontend | http://localhost:5173 | Page d'accueil |
 | Backend | http://localhost:3001/api/health | `{ "status": "ok" }` |
+| Swagger | http://localhost:3001/api/docs | Documentation interactive de l'API |
 
 ### Commandes
 
@@ -208,3 +209,6 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 | [docs/PERSONAS.md](docs/PERSONAS.md) | Nos 3 personas et leurs besoins |
 | [docs/STORYMAP.md](docs/STORYMAP.md) | Parcours utilisateur et découpage en releases |
 | [docs/API.md](docs/API.md) | Routes de l'API (générée automatiquement) |
+| [Swagger](http://localhost:3001/api/docs) | Doc interactive de l'API (`/api/docs`, document brut sur `/api/openapi.json`) |
+| [ERRORS.md](ERRORS.md) | Format des erreurs de l'API et catalogue des codes |
+| [docs/DATABASE.md](docs/DATABASE.md) | Schéma de la base, dictionnaire des données, migrations |
