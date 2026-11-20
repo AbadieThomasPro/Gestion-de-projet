@@ -1,4 +1,5 @@
 import { AppError, problemBody } from './errors';
+import { isForeignKeyViolation } from './prisma';
 
 export const TRACE_HEADER = 'X-Trace-Id';
 
@@ -19,7 +20,13 @@ export function withErrorHandler(handler) {
       response.headers.set(TRACE_HEADER, traceId);
       return response;
     } catch (caught) {
-      const error = caught instanceof AppError ? caught : new AppError('LL_INTERNAL_500');
+      // The only foreign keys written from the token are the user ids: the account no longer exists
+      const error =
+        caught instanceof AppError
+          ? caught
+          : isForeignKeyViolation(caught)
+            ? new AppError('LL_AUTH_401')
+            : new AppError('LL_INTERNAL_500');
       const entry = { traceId, method: request.method, path: pathname, status: error.status, code: error.code };
 
       if (error.status >= 500) {

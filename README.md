@@ -63,6 +63,7 @@ Le découpage en releases est détaillé dans la [story map](docs/STORYMAP.md).
 ```bash
 git clone https://github.com/Miisterone/Gestion-de-projet.git
 cd Gestion-de-projet
+echo "JWT_SECRET=$(openssl rand -hex 32)" > .env   # secret obligatoire, jamais la valeur par défaut
 docker compose up -d --build
 ```
 

@@ -18,6 +18,11 @@ export function isUniqueViolation(error) {
   return error?.code === 'P2002';
 }
 
+// Foreign key violated (ex: the author of a token was deleted in the meantime)
+export function isForeignKeyViolation(error) {
+  return error?.code === 'P2003';
+}
+
 // Record to update or delete not found
 export function isNotFound(error) {
   return error?.code === 'P2025';
