@@ -25,5 +25,6 @@ Les routes protégées attendent le header `Authorization: Bearer <token>`.
 | GET | `/api/posts` | Oui | Feed, 10 posts per page (?page=1) |
 | POST | `/api/posts` | Oui | Publish a post |
 | GET | `/api/users/[id]` | Oui | Profile of a user with their posts |
+| GET | `/api/users/[id]/stats` | Oui | Statistics of a user: posts, likes and comments received, current streak |
 | PUT | `/api/users/me` | Oui | Edit my profile |
 | GET | `/api/users` | Oui | Search users by name |

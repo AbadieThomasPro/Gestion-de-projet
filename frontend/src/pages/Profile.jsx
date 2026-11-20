@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { api } from '../api';
 import Avatar from '../components/Avatar';
 import Post from '../components/Post';
+import StatsCard from '../components/profile/StatsCard';
 
 export default function Profile({ user, setUser }) {
   const { id } = useParams();
@@ -12,6 +13,26 @@ export default function Profile({ user, setUser }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [error, setError] = useState('');
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+
+  // Statistics are loaded apart: an error here must not hide the profile
+  useEffect(() => {
+    let ignore = false;
+    setStats(null);
+    setStatsError(null);
+    setStatsLoading(true);
+
+    api(`/users/${id}/stats`)
+      .then((data) => !ignore && setStats(data))
+      .catch((err) => !ignore && setStatsError(err))
+      .finally(() => !ignore && setStatsLoading(false));
+
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
 
   useEffect(() => {
     setEditing(false);
@@ -69,6 +90,13 @@ export default function Profile({ user, setUser }) {
         {friendStatus === 'received' && <span className="badge">Vous a envoyé une demande</span>}
         {friendStatus === 'friends' && <span className="badge">Amis</span>}
       </div>
+
+      <StatsCard
+        stats={stats}
+        isLoading={statsLoading}
+        error={statsError}
+        isMe={friendStatus === 'me'}
+      />
 
       {editing && (
         <form className="card edit-form" onSubmit={handleSave}>
