@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Feed from './pages/Feed';
+import Events from './pages/Events';
 import Profile from './pages/Profile';
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
       <main className="container">
         <Routes>
           <Route path="/" element={<Feed user={user} />} />
+          <Route path="/events" element={<Events user={user} />} />
           <Route path="/profile/:id" element={<Profile user={user} setUser={setUser} />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
