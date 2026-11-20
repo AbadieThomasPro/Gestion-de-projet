@@ -9,8 +9,6 @@ Réseau social inspiré de Facebook : **React** (frontend) + **Next.js** (API ba
 
 📋 **Backlog :** [GitHub Project](https://github.com/users/Miisterone/projects/5)
 
-🗂️ **Backlog par sprint :** [docs/backlog](docs/backlog/README.md) (ordre de réalisation, dépendances et statut vérifié dans le code)
-
 ## Sommaire
 
 - [Contexte](#-contexte)
@@ -33,7 +31,7 @@ Projet de groupe : concevoir un réseau social simplifié reprenant les usages c
 | **Dev Back** | API Next.js, base de données, sécurité |
 | **Dev Front** | Interface React, intégration de l'API |
 
-La gestion de projet se fait sur **[GitHub Projects](https://github.com/users/Miisterone/projects/5)** : chaque ticket est une **issue** du dépôt. Une EPIC est une issue (label `epic`) dont les tâches front et back sont des **sous-issues**. Le numéro de l'issue **`#<n>`** est repris dans le nom des branches et des Pull Requests.
+La gestion de projet se fait sur **[GitHub Projects](https://github.com/users/Miisterone/projects/5)** : chaque ticket est une **issue** du dépôt. Une EPIC est une issue (label `epic`) dont les tâches front et back sont des **sous-issues**. Chaque issue a un identifiant **`LL-<id>`** dans son titre, repris dans le nom des branches. Le champ **Sprint** du Project range les issues par sprint, les dépendances sont des liens *Blocked by* entre issues.
 
 Colonnes du board (champ **Status**) : **Backlog → À faire → En cours → En review → À tester → Terminé**.
 
@@ -131,20 +129,20 @@ Nous suivons **GitFlow** : deux branches permanentes (`main`, `develop`) et des 
 |---|---|---|---|
 | `main` | Versions stables livrées, taguées | — | — |
 | `develop` | Intégration des fonctionnalités du sprint | `main` | — |
-| `feature/<n>-<desc>` | Une fonctionnalité = une issue | `develop` | `develop` |
-| `fix/<n>-<desc>` | Correction pendant le développement | `develop` | `develop` |
+| `feature/LL-<id>-<desc>` | Une fonctionnalité = une issue | `develop` | `develop` |
+| `fix/LL-<id>-<desc>` | Correction pendant le développement | `develop` | `develop` |
 | `release/x.y.z` | Stabilisation d'une version | `develop` | `main` + `develop` |
-| `hotfix/<n>-<desc>` | Correctif urgent en production | `main` | `main` + `develop` |
+| `hotfix/LL-<id>-<desc>` | Correctif urgent en production | `main` | `main` + `develop` |
 
 ```mermaid
 gitGraph
     commit id: "init"
     branch develop
     checkout develop
-    branch feature/7-login-page
+    branch feature/LL-7-login-page
     commit id: "feat(frontend): login page"
     checkout develop
-    merge feature/7-login-page
+    merge feature/LL-7-login-page
     branch release/0.1.0
     commit id: "chore: bump version"
     checkout main
@@ -174,7 +172,7 @@ flowchart LR
 |---|---|---|
 | **Backlog** | PO | Crée le ticket, le rattache à son EPIC |
 | **À faire** | Équipe | Ticket choisi en sprint planning |
-| **En cours** | Dev | Crée sa branche `feature/<n>-<desc>` |
+| **En cours** | Dev | Crée sa branche `feature/LL-<id>-<desc>` |
 | **En review** | Dev | Ouvre la PR vers `develop` 🤖 |
 | **À tester** | PO | PR fusionnée, le PO vérifie 🤖 |
 | **Terminé** | PO | Validé |
@@ -189,7 +187,7 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 |---|---|---|
 | [CI](.github/workflows/ci.yml) | Chaque PR et push sur `main` / `develop` | Vérifie que la doc de l'API est à jour |
 | [PR check](.github/workflows/pr-check.yml) | Ouverture / modification d'une PR | Vérifie le nom de la branche et le titre (Conventional Commits), ajoute les labels `frontend` / `backend` / `infra` / `documentation` |
-| [Project](.github/workflows/project.yml) | Issue créée, PR ouverte / mergée | Ajoute l'issue au Project, puis passe l'issue `#<n>` de la branche en **En review** puis **À tester** |
+| [Project](.github/workflows/project.yml) | Issue créée, PR ouverte / mergée | Ajoute l'issue au Project, puis passe l'issue `LL-<id>` de la branche en **En review** puis **À tester** |
 | [Docker](.github/workflows/docker.yml) | Push sur `main` ou tag `v*` | Build les images front et back et les publie sur GitHub Container Registry |
 | [Release](.github/workflows/release.yml) | Tag `v*` | Crée la release GitHub avec la liste des PR, classées par label |
 | [Dependabot](.github/dependabot.yml) | Chaque semaine | Ouvre des PR pour mettre à jour les dépendances |
@@ -207,14 +205,11 @@ Toutes les automatisations sont des workflows GitHub Actions dans [.github/workf
 
 **Configuration GitHub Project** (une seule fois) : créer un token *classic* avec les scopes `repo` et `project`, l'ajouter dans *Settings → Secrets and variables → Actions* sous le nom `PROJECT_TOKEN`. Dans le Project, le champ **Status** doit contenir les options `Backlog`, `À faire`, `En cours`, `En review`, `À tester`, `Terminé` ; activer aussi le workflow intégré *Item closed → Terminé*. Le nom du champ est modifiable en haut de [project-status.mjs](.github/scripts/project-status.mjs).
 
-**Import du backlog** (une seule fois) : `gh auth refresh -s project` puis `GITHUB_TOKEN=$(gh auth token) node scripts/migrate-backlog.mjs --apply`. Le script crée les issues depuis [docs/backlog](docs/backlog/), les sous-issues, les dépendances, et remplit les champs `Status`, `Sprint`, `Rôle` et `Estimation` du Project. Sans `--apply`, il affiche seulement ce qu'il ferait.
-
 ## 📚 Documentation
 
 | Document | Contenu |
 |---|---|
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branches, commits, Pull Requests, versions |
-| [docs/backlog](docs/backlog/README.md) | Backlog par sprint, ordre de réalisation et dépendances |
 | [docs/PERSONAS.md](docs/PERSONAS.md) | Nos 3 personas et leurs besoins |
 | [docs/STORYMAP.md](docs/STORYMAP.md) | Parcours utilisateur et découpage en releases |
 | [docs/API.md](docs/API.md) | Routes de l'API (générée automatiquement) |

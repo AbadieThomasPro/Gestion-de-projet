@@ -1,4 +1,6 @@
-// Updates the "Status" of the issue linked to the branch (ex: feature/12-login -> issue #12)
+// Updates the "Status" of the issue linked to the branch:
+//   feature/LL-125-xxx -> issue whose title contains LL-125
+//   feature/12-xxx     -> issue #12
 // in the GitHub Project (https://github.com/users/Miisterone/projects/5).
 const { PROJECT_TOKEN, PROJECT_OWNER, PROJECT_NUMBER, REPOSITORY, BRANCH, STATUS } = process.env;
 
@@ -10,13 +12,29 @@ if (!PROJECT_TOKEN) {
   process.exit(0);
 }
 
-const match = BRANCH.match(/^(?:feature|fix|hotfix)\/(\d+)-/i);
-if (!match) {
-  console.log(`No issue number in branch "${BRANCH}"`);
+const [owner, repo] = REPOSITORY.split('/');
+const ticket = BRANCH.match(/^(?:feature|fix|hotfix)\/(LL-\d+|\d+)-/i)?.[1]?.toUpperCase();
+if (!ticket) {
+  console.log(`No ticket in branch "${BRANCH}"`);
   process.exit(0);
 }
-const issueNumber = Number(match[1]);
-const [owner, repo] = REPOSITORY.split('/');
+
+let issueNumber = Number(ticket);
+if (ticket.startsWith('LL-')) {
+  const pattern = new RegExp(`\\b${ticket}\\b`);
+  for (let page = 1; !issueNumber; page++) {
+    const res = await fetch(`https://api.github.com/repos/${REPOSITORY}/issues?state=all&per_page=100&page=${page}`, {
+      headers: { Authorization: `Bearer ${PROJECT_TOKEN}` },
+    });
+    const list = await res.json();
+    issueNumber = list.find((i) => !i.pull_request && pattern.test(i.title))?.number;
+    if (list.length < 100) break;
+  }
+  if (!issueNumber) {
+    console.log(`No issue titled with ${ticket}`);
+    process.exit(0);
+  }
+}
 
 async function graphql(query, variables) {
   const res = await fetch('https://api.github.com/graphql', {
